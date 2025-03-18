@@ -14,9 +14,10 @@
 
 """LeanFrame provides a DataFrame API scaled by the BigQuery engine."""
 
+from leanframe.dataframe import DataFrame
 from leanframe.version import __version__
-
 
 __all__ = [
     "__version__",
+    "DataFrame",
 ]

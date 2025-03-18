@@ -58,6 +58,7 @@ dependencies = [
     "sqlglot >=23.6.3",
     "tabulate >=0.9",
     "ipywidgets >=7.7.1",
+    "ibis-framework>=10.3.1,<4",
     "humanize >=4.6.0",
     "matplotlib >=3.7.1",
     "db-dtypes >=1.4.2",
