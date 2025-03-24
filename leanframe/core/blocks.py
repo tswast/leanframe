@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2023 Google LLC, LeanFrame Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import itertools
 import typing
 from typing import Iterable, List, Optional, Sequence, Tuple, Union
 
+import ibis
 import geopandas as gpd  # type: ignore
 import ibis.expr.schema as ibis_schema
 import ibis.expr.types as ibis_types
@@ -36,69 +37,48 @@ import leanframe.aggregations as agg_ops
 import leanframe.core as core
 import leanframe.core.indexes as indexes
 import leanframe.dtypes
-import leanframe.guid as guid
 import leanframe.operations as ops
 
 
 class Block:
-    """A mutable 2D data structure."""
+    """A 2D data structure backing DataFrame and Series."""
 
     def __init__(
         self,
-        expr: core.BigFramesExpr,
-        index_columns: Iterable[str] = (),
+        table: ibis_types.Table,
+        columns: Sequence[ibis_types.Value] = (),
+        order_by_columns: Sequence[ibis_types.Value] = (),
     ):
-        self._expr = expr
-        self._index = indexes.ImplicitJoiner(self)
-        self._index_columns = tuple(index_columns)
-        self._sync_index()
+        self._table = table
+        self._columns = list(columns)
+        self._order_by_columns = list(order_by_columns)
 
-    @property
-    def index(self) -> Union[indexes.ImplicitJoiner, indexes.Index]:
-        """Row identities for values in the Block."""
-        return self._index
+    def to_ibis_expr(
+        self,
+    ):
+        """
+        Creates an Ibis table expression representing the Block.
 
-    @index.setter
-    def index(self, value: indexes.ImplicitJoiner):
-        # TODO(swast): We shouldn't allow changing the index, as that'll break
-        # references to this block from existing Index objects.
-        self._expr = value._expr
-        if isinstance(value, indexes.Index):
-            self._index_columns = (value._index_column,)
-        else:
-            self._index_columns = ()
-        self._index = value
+        Returns:
+            An ibis expression representing the data held by the Block.
+        """
+        table = self._table
+        columns = self._columns
+        order_by_columns = self._order_by_columns
 
-    @property
-    def index_columns(self) -> Sequence[str]:
-        """Column(s) to use as row labels."""
-        return self._index_columns
+        # Special case for empty tables, since we can't create an empty
+        # projection.
+        if not columns:
+            return ibis.memtable([])
+        table = table.select(columns + order_by_columns)
 
-    @index_columns.setter
-    def index_columns(self, value: Iterable[str]):
-        # TODO(swast): We shouldn't allow changing the index, as that'll break
-        # references to this block from existing Index objects.
-        self._index_columns = tuple(value)
-        self._sync_index()
+        # Some ordering columns are value columns, while other are used purely for ordering.
+        # We drop the non-value columns after the ordering
+        if order_by_columns:
+            table = table.order_by(order_by_columns)
+            table = table.drop(*(column.name for column in order_by_columns))
 
-    @property
-    def value_columns(self) -> Sequence[str]:
-        """All value columns, mutually exclusive with index columns."""
-        return [
-            column
-            for column in self._expr.column_names
-            if column not in self.index_columns
-        ]
-
-    @property
-    def expr(self) -> core.BigFramesExpr:
-        """Expression representing all columns, including index columns."""
-        return self._expr
-
-    @expr.setter
-    def expr(self, expr: core.BigFramesExpr):
-        self._expr = expr
-        self._sync_index()
+        return table
 
     @property
     def dtypes(
@@ -107,7 +87,7 @@ class Block:
         """Returns the dtypes as a Pandas Series object"""
         ibis_dtypes = [
             dtype
-            for col, dtype in self.expr.to_ibis_expr(ordering_mode="unordered")
+            for col, dtype in self.expr.to_ibis_expr()
             .schema()
             .items()
             if col not in self.index_columns
@@ -116,58 +96,6 @@ class Block:
             leanframe.dtypes.ibis_dtype_to_leanframe_dtype(ibis_dtype)
             for ibis_dtype in ibis_dtypes
         ]
-
-    def reset_index(self) -> Block:
-        """Reset the index of the block, promoting the old index to a value column.
-
-        Arguments:
-            name: this is the column id for the new value id derived from the old index
-
-        Returns:
-            A new Block because dropping index columns can break references
-            from Index classes that point to this block.
-        """
-        block = self.copy()
-        new_index_col_id = guid.generate_guid(prefix="index_")
-        block.expr = self._expr.promote_offsets(new_index_col_id)
-
-        # TODO(swast): Only remove a specified number of levels from a
-        # MultiIndex.
-        block.index_columns = [new_index_col_id]
-        block._sync_index()
-        block.index.name = None
-        return block
-
-    def _sync_index(self):
-        """Update index to match latest expression and column(s).
-
-        Index object contains a reference to the expression object so any changes to the block's expression requires building a new index object as well.
-        """
-        expr = self._expr
-        columns = self._index_columns
-        if len(columns) == 0:
-            self._index = indexes.ImplicitJoiner(self, self._index.name)
-        elif len(columns) == 1:
-            index_column = columns[0]
-            self._index = indexes.Index(self, index_column, name=self._index.name)
-            # Rearrange so that index columns are first.
-            if expr._columns and expr._columns[0].get_name() != index_column:
-                expr_builder = expr.builder()
-                index_columns = [
-                    column
-                    for column in expr_builder.columns
-                    if column.get_name() == index_column
-                ]
-                value_columns = [
-                    column
-                    for column in expr_builder.columns
-                    if column.get_name() != index_column
-                ]
-                expr_builder.columns = index_columns + value_columns
-                # Avoid infinite loops by bypassing the property setter.
-                self._expr = expr_builder.build()
-        else:
-            raise NotImplementedError("MultiIndex not supported.")
 
     def _to_dataframe(self, result, schema: ibis_schema.Schema) -> pd.DataFrame:
         """Convert BigQuery data to pandas DataFrame with specific dtypes."""
