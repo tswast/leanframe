@@ -12,12 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""LeanFrame provides a DataFrame API scaled by the BigQuery engine."""
+"""Bigframes provides a DataFrame API for BigQuery."""
 
+from leanframe.leanframe import concat
 from leanframe.dataframe import DataFrame
+from leanframe.remote_function import (
+    get_cloud_function_name,
+    get_remote_function_locations,
+    remote_function,
+)
+from leanframe.series import Series
+from leanframe.session import connect, Context, Session
 from leanframe.version import __version__
 
 __all__ = [
-    "__version__",
+    "concat",
+    "connect",
+    "Context",
+    "Session",
     "DataFrame",
+    "Series",
+    "get_remote_function_locations",
+    "get_cloud_function_name",
+    "remote_function",
+    "__version__",
 ]

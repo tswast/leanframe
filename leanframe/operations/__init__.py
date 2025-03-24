@@ -14,364 +14,389 @@
 
 from __future__ import annotations
 
-from bigframes.operations.array_ops import ArrayIndexOp, ArraySliceOp, ArrayToStringOp
-from bigframes.operations.base_ops import (
-    BinaryOp,
-    NaryOp,
-    RowOp,
-    ScalarOp,
-    TernaryOp,
-    UnaryOp,
-)
-from bigframes.operations.blob_ops import (
-    obj_fetch_metadata_op,
-    obj_make_ref_op,
-    ObjGetAccessUrl,
-)
-from bigframes.operations.bool_ops import and_op, or_op, xor_op
-from bigframes.operations.comparison_ops import (
-    eq_null_match_op,
-    eq_op,
-    ge_op,
-    gt_op,
-    le_op,
-    lt_op,
-    ne_op,
-)
-from bigframes.operations.date_ops import (
-    date_diff_op,
-    day_op,
-    dayofweek_op,
-    month_op,
-    quarter_op,
-    year_op,
-)
-from bigframes.operations.datetime_ops import (
-    date_op,
-    StrftimeOp,
-    time_op,
-    timestamp_diff_op,
-    ToDatetimeOp,
-    ToTimestampOp,
-    UnixMicros,
-    UnixMillis,
-    UnixSeconds,
-)
-from bigframes.operations.distance_ops import (
-    cosine_distance_op,
-    euclidean_distance_op,
-    manhattan_distance_op,
-)
-from bigframes.operations.frequency_ops import (
-    DatetimeToIntegerLabelOp,
-    FloorDtOp,
-    IntegerLabelToDatetimeOp,
-)
-from bigframes.operations.generic_ops import (
-    AsTypeOp,
-    case_when_op,
-    CaseWhenOp,
-    clip_op,
-    coalesce_op,
-    fillna_op,
-    hash_op,
-    invert_op,
-    IsInOp,
-    isnull_op,
-    MapOp,
-    maximum_op,
-    minimum_op,
-    notnull_op,
-    RowKey,
-    SqlScalarOp,
-    where_op,
-)
-from bigframes.operations.geo_ops import (
-    geo_area_op,
-    geo_st_astext_op,
-    geo_st_boundary_op,
-    geo_st_geogfromtext_op,
-    geo_st_geogpoint_op,
-    geo_x_op,
-    geo_y_op,
-)
-from bigframes.operations.json_ops import (
-    JSONExtract,
-    JSONExtractArray,
-    JSONExtractStringArray,
-    JSONSet,
-    JSONValue,
-    ParseJSON,
-    ToJSONString,
-)
-from bigframes.operations.numeric_ops import (
-    abs_op,
-    add_op,
-    AddOp,
-    arccos_op,
-    arccosh_op,
-    arcsin_op,
-    arcsinh_op,
-    arctan2_op,
-    arctan_op,
-    arctanh_op,
-    ceil_op,
-    cos_op,
-    cosh_op,
-    div_op,
-    DivOp,
-    exp_op,
-    expm1_op,
-    floor_op,
-    floordiv_op,
-    FloorDivOp,
-    ln_op,
-    log1p_op,
-    log10_op,
-    mod_op,
-    mul_op,
-    MulOp,
-    neg_op,
-    pos_op,
-    pow_op,
-    round_op,
-    sin_op,
-    sinh_op,
-    sqrt_op,
-    sub_op,
-    SubOp,
-    tan_op,
-    tanh_op,
-    unsafe_pow_op,
-)
-from bigframes.operations.numpy_op_maps import NUMPY_TO_BINOP, NUMPY_TO_OP
-from bigframes.operations.remote_function_ops import (
-    BinaryRemoteFunctionOp,
-    NaryRemoteFunctionOp,
-    RemoteFunctionOp,
-)
-from bigframes.operations.string_ops import (
-    capitalize_op,
-    EndsWithOp,
-    isalnum_op,
-    isalpha_op,
-    isdecimal_op,
-    isdigit_op,
-    islower_op,
-    isnumeric_op,
-    isspace_op,
-    isupper_op,
-    len_op,
-    lower_op,
-    lstrip_op,
-    RegexReplaceStrOp,
-    ReplaceStrOp,
-    reverse_op,
-    rstrip_op,
-    StartsWithOp,
-    strconcat_op,
-    StrContainsOp,
-    StrContainsRegexOp,
-    StrExtractOp,
-    StrFindOp,
-    StrGetOp,
-    StringSplitOp,
-    strip_op,
-    StrPadOp,
-    StrRepeatOp,
-    StrSliceOp,
-    upper_op,
-    ZfillOp,
-)
-from bigframes.operations.struct_ops import StructFieldOp, StructOp
-from bigframes.operations.time_ops import hour_op, minute_op, normalize_op, second_op
-from bigframes.operations.timedelta_ops import (
-    date_add_op,
-    date_sub_op,
-    timedelta_floor_op,
-    timestamp_add_op,
-    timestamp_sub_op,
-    ToTimedeltaOp,
-)
+import functools
+import typing
 
-__all__ = [
-    # Base ops
-    "RowOp",
-    "NaryOp",
-    "UnaryOp",
-    "BinaryOp",
-    "TernaryOp",
-    "ScalarOp",
-    # Generic ops
-    "AsTypeOp",
-    "case_when_op",
-    "CaseWhenOp",
-    "clip_op",
-    "coalesce_op",
-    "fillna_op",
-    "hash_op",
-    "invert_op",
-    "IsInOp",
-    "isnull_op",
-    "MapOp",
-    "maximum_op",
-    "minimum_op",
-    "notnull_op",
-    "RowKey",
-    "SqlScalarOp",
-    "where_op",
-    # String ops
-    "capitalize_op",
-    "EndsWithOp",
-    "isalnum_op",
-    "isalpha_op",
-    "isdecimal_op",
-    "isdigit_op",
-    "islower_op",
-    "isnumeric_op",
-    "isspace_op",
-    "isupper_op",
-    "len_op",
-    "lower_op",
-    "lstrip_op",
-    "RegexReplaceStrOp",
-    "ReplaceStrOp",
-    "reverse_op",
-    "rstrip_op",
-    "StartsWithOp",
-    "strconcat_op",
-    "StrContainsOp",
-    "StrContainsRegexOp",
-    "StrExtractOp",
-    "StrFindOp",
-    "StrGetOp",
-    "StringSplitOp",
-    "strip_op",
-    "StrPadOp",
-    "StrRepeatOp",
-    "StrSliceOp",
-    "upper_op",
-    "ZfillOp",
-    # Date ops
-    "date_diff_op",
-    "day_op",
-    "month_op",
-    "year_op",
-    "dayofweek_op",
-    "quarter_op",
-    # Time ops
-    "hour_op",
-    "minute_op",
-    "second_op",
-    "normalize_op",
-    # Timedelta ops
-    "date_add_op",
-    "date_sub_op",
-    "timedelta_floor_op",
-    "timestamp_add_op",
-    "timestamp_sub_op",
-    "ToTimedeltaOp",
-    # Datetime ops
-    "date_op",
-    "time_op",
-    "timestamp_diff_op",
-    "ToDatetimeOp",
-    "ToTimestampOp",
-    "StrftimeOp",
-    "UnixMicros",
-    "UnixMillis",
-    "UnixSeconds",
-    # Numeric ops
-    "abs_op",
-    "add_op",
-    "AddOp",
-    "arccos_op",
-    "arccosh_op",
-    "arcsin_op",
-    "arcsinh_op",
-    "arctan2_op",
-    "arctan_op",
-    "arctanh_op",
-    "ceil_op",
-    "cos_op",
-    "cosh_op",
-    "div_op",
-    "DivOp",
-    "exp_op",
-    "expm1_op",
-    "floor_op",
-    "floordiv_op",
-    "FloorDivOp",
-    "ln_op",
-    "log1p_op",
-    "log10_op",
-    "mod_op",
-    "mul_op",
-    "MulOp",
-    "neg_op",
-    "pos_op",
-    "pow_op",
-    "round_op",
-    "sin_op",
-    "sinh_op",
-    "sqrt_op",
-    "sub_op",
-    "SubOp",
-    "tan_op",
-    "tanh_op",
-    "unsafe_pow_op",
-    # Array ops
-    "ArrayIndexOp",
-    "ArraySliceOp",
-    "ArrayToStringOp",
-    # Blob ops
-    "ObjGetAccessUrl",
-    "obj_make_ref_op",
-    "obj_fetch_metadata_op",
-    # Struct ops
-    "StructFieldOp",
-    "StructOp",
-    # Remote Functions ops
-    "BinaryRemoteFunctionOp",
-    "NaryRemoteFunctionOp",
-    "RemoteFunctionOp",
-    # Frequency ops
-    "DatetimeToIntegerLabelOp",
-    "FloorDtOp",
-    "IntegerLabelToDatetimeOp",
-    # JSON ops
-    "JSONExtract",
-    "JSONExtractArray",
-    "JSONExtractStringArray",
-    "JSONSet",
-    "JSONValue",
-    "ParseJSON",
-    "ToJSONString",
-    # Bool ops
-    "and_op",
-    "or_op",
-    "xor_op",
-    # Comparison ops
-    "eq_null_match_op",
-    "eq_op",
-    "ge_op",
-    "gt_op",
-    "le_op",
-    "lt_op",
-    "ne_op",
-    # Distance ops
-    "cosine_distance_op",
-    "euclidean_distance_op",
-    "manhattan_distance_op",
-    # Geo ops
-    "geo_area_op",
-    "geo_st_boundary_op",
-    "geo_st_astext_op",
-    "geo_st_geogfromtext_op",
-    "geo_st_geogpoint_op",
-    "geo_x_op",
-    "geo_y_op",
-    # Numpy ops mapping
-    "NUMPY_TO_BINOP",
-    "NUMPY_TO_OP",
+import ibis
+import ibis.common.exceptions
+import ibis.expr.datatypes as ibis_dtypes
+import ibis.expr.operations.generic
+import ibis.expr.types as ibis_types
+import numpy as np
+
+import leanframe.dtypes
+
+_ZERO = typing.cast(ibis_types.NumericValue, ibis_types.literal(0))
+_INF = typing.cast(ibis_types.NumericValue, ibis_types.literal(np.inf))
+
+BinaryOp = typing.Callable[[ibis_types.Value, ibis_types.Value], ibis_types.Value]
+TernaryOp = typing.Callable[
+    [ibis_types.Value, ibis_types.Value, ibis_types.Value], ibis_types.Value
 ]
+
+
+### Unary Ops
+class UnaryOp:
+    def _as_ibis(self, x):
+        raise NotImplementedError("Base class UnaryOp has no implementation.")
+
+    @property
+    def is_windowed(self):
+        return False
+
+
+class AbsOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        return typing.cast(ibis_types.NumericValue, x).abs()
+
+
+class InvertOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        return typing.cast(ibis_types.NumericValue, x).negate()
+
+
+class IsNullOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        return x.isnull()
+
+
+class LenOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        return typing.cast(ibis_types.StringValue, x).length()
+
+
+class NotNullOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        return x.notnull()
+
+
+class ReverseOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        return typing.cast(ibis_types.StringValue, x).reverse()
+
+
+class LowerOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        return typing.cast(ibis_types.StringValue, x).lower()
+
+
+class UpperOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        return typing.cast(ibis_types.StringValue, x).upper()
+
+
+class StripOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        return typing.cast(ibis_types.StringValue, x).strip()
+
+
+class IsNumericOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        # catches all members of the Unicode number class, which matches pandas isnumeric
+        # see https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#regexp_contains
+        return typing.cast(ibis_types.StringValue, x).re_search(r"^(\pN*)$")
+
+
+class RstripOp(UnaryOp):
+    def _as_ibis(self, x: ibis_types.Value):
+        return typing.cast(ibis_types.StringValue, x).rstrip()
+
+
+# Parameterized ops
+class AsTypeOp(UnaryOp):
+    def __init__(self, to_type: leanframe.dtypes.IbisDtype):
+        self.to_type = to_type
+
+    def _as_ibis(self, x: ibis_types.Value):
+        return leanframe.dtypes.cast_ibis_value(x, self.to_type)
+
+
+class FindOp(UnaryOp):
+    def __init__(self, sub, start, end):
+        self._sub = sub
+        self._start = start
+        self._end = end
+
+    def _as_ibis(self, x: ibis_types.Value):
+        return typing.cast(ibis_types.StringValue, x).find(
+            self._sub, self._start, self._end
+        )
+
+
+class SliceOp(UnaryOp):
+    def __init__(self, start, stop):
+        self._start = start
+        self._stop = stop
+
+    def _as_ibis(self, x: ibis_types.Value):
+        return typing.cast(ibis_types.StringValue, x)[self._start : self._stop]
+
+
+class BinopPartialRight(UnaryOp):
+    def __init__(self, binop: BinaryOp, right_scalar: typing.Any):
+        self._binop = binop
+        self._right = right_scalar
+
+    def _as_ibis(self, x):
+        return self._binop(x, self._right)
+
+
+class BinopPartialLeft(UnaryOp):
+    def __init__(self, binop: BinaryOp, left_scalar: typing.Any):
+        self._binop = binop
+        self._left = left_scalar
+
+    def _as_ibis(self, x):
+        return self._binop(self._left, x)
+
+
+abs_op = AbsOp()
+invert_op = InvertOp()
+isnull_op = IsNullOp()
+len_op = LenOp()
+notnull_op = NotNullOp()
+reverse_op = ReverseOp()
+lower_op = LowerOp()
+upper_op = UpperOp()
+strip_op = StripOp()
+isnumeric_op = IsNumericOp()
+rstrip_op = RstripOp()
+
+
+### Binary Ops
+def short_circuit_nulls(type_override: typing.Optional[ibis_dtypes.DataType] = None):
+    """Wraps a binary operator to generate nulls of the expected type if either input is a null scalar."""
+
+    def short_circuit_nulls_inner(binop):
+        @functools.wraps(binop)
+        def wrapped_binop(x: ibis_types.Value, y: ibis_types.Value):
+            if isinstance(x, ibis_types.NullScalar):
+                return ibis_types.null().cast(type_override or y.type())
+            elif isinstance(y, ibis_types.NullScalar):
+                return ibis_types.null().cast(type_override or x.type())
+            else:
+                return binop(x, y)
+
+        return wrapped_binop
+
+    return short_circuit_nulls_inner
+
+
+def and_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return typing.cast(ibis_types.BooleanValue, x) & typing.cast(
+        ibis_types.BooleanValue, y
+    )
+
+
+def or_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return typing.cast(ibis_types.BooleanValue, x) | typing.cast(
+        ibis_types.BooleanValue, y
+    )
+
+
+@short_circuit_nulls()
+def add_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    if isinstance(x, ibis_types.NullScalar) or isinstance(x, ibis_types.NullScalar):
+        return
+    return typing.cast(ibis_types.NumericValue, x) + typing.cast(
+        ibis_types.NumericValue, y
+    )
+
+
+@short_circuit_nulls()
+def sub_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return typing.cast(ibis_types.NumericValue, x) - typing.cast(
+        ibis_types.NumericValue, y
+    )
+
+
+@short_circuit_nulls()
+def mul_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return typing.cast(ibis_types.NumericValue, x) * typing.cast(
+        ibis_types.NumericValue, y
+    )
+
+
+@short_circuit_nulls(ibis_dtypes.float)
+def div_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return typing.cast(ibis_types.NumericValue, x) / typing.cast(
+        ibis_types.NumericValue, y
+    )
+
+
+def eq_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return x.__eq__(y)
+
+
+@short_circuit_nulls(ibis_dtypes.bool)
+def lt_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return x < y
+
+
+@short_circuit_nulls(ibis_dtypes.bool)
+def le_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return x <= y
+
+
+@short_circuit_nulls(ibis_dtypes.bool)
+def gt_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return x > y
+
+
+@short_circuit_nulls(ibis_dtypes.bool)
+def ge_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return x >= y
+
+
+@short_circuit_nulls(ibis_dtypes.int)
+def floordiv_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    x_numeric = typing.cast(ibis_types.NumericValue, x)
+    y_numeric = typing.cast(ibis_types.NumericValue, y)
+    floordiv_expr = x_numeric // y_numeric
+
+    # DIV(N, 0) will error in bigquery, but needs to return 0 for int, and inf for float in BQ so we short-circuit in this case.
+    # Multiplying left by zero propogates nulls.
+    zero_result = _INF if (x.type().is_floating() or y.type().is_floating()) else _ZERO
+    return (
+        ibis.case()
+        .when(y_numeric == _ZERO, zero_result * x_numeric)
+        .else_(floordiv_expr)
+        .end()
+    )
+
+
+@short_circuit_nulls()
+def mod_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    # TODO(tbergeron): fully support floats, including when mixed with integer
+    # Pandas has inconsitency about whether N mod 0. Most conventions have this be NAN.
+    # For some dtypes, the result is 0 instead. This implementation results in NA always.
+    x_numeric = typing.cast(ibis_types.NumericValue, x)
+    y_numeric = typing.cast(ibis_types.NumericValue, y)
+    # Hacky short-circuit to avoid passing zero-literal to sql backend, evaluate locally instead to null.
+    op = y.op()
+    if isinstance(op, ibis.expr.operations.generic.Literal) and op.value == 0:
+        return ibis_types.null().cast(x.type())
+
+    bq_mod = x_numeric % y_numeric  # Bigquery will maintain x sign here
+    # In BigQuery returned value has the same sign as X. In pandas, the sign of y is used, so we need to flip the result if sign(x) != sign(y)
+    return (
+        ibis.case()
+        .when(
+            y_numeric == _ZERO, _ZERO * x_numeric
+        )  # Dummy op to propogate nulls and type from x arg
+        .when(
+            (y_numeric < _ZERO) & (bq_mod > _ZERO), (y_numeric + bq_mod)
+        )  # Convert positive result to negative
+        .when(
+            (y_numeric > _ZERO) & (bq_mod < _ZERO), (y_numeric + bq_mod)
+        )  # Convert negative result to positive
+        .else_(bq_mod)
+        .end()
+    )
+
+
+def fillna_op(
+    x: ibis_types.Value,
+    y: ibis_types.Value,
+):
+    return x.fillna(typing.cast(ibis_types.Scalar, y))
+
+
+def reverse(op: BinaryOp) -> BinaryOp:
+    return lambda x, y: op(y, x)
+
+
+def partial_left(op: BinaryOp, scalar: typing.Any) -> UnaryOp:
+    return BinopPartialLeft(op, scalar)
+
+
+def partial_right(op: BinaryOp, scalar: typing.Any) -> UnaryOp:
+    return BinopPartialRight(op, scalar)
+
+
+# Ternary ops
+def where_op(
+    original: ibis_types.Value,
+    condition: ibis_types.Value,
+    replacement: ibis_types.Value,
+) -> ibis_types.Value:
+    """Returns x if y is true, otherwise returns z."""
+    return ibis.case().when(condition, original).else_(replacement).end()
+
+
+def clip_op(
+    original: ibis_types.Value,
+    lower: ibis_types.Value,
+    upper: ibis_types.Value,
+) -> ibis_types.Value:
+    """Clips value to lower and upper bounds."""
+    if isinstance(lower, ibis_types.NullScalar) and (
+        not isinstance(upper, ibis_types.NullScalar)
+    ):
+        return (
+            ibis.case()
+            .when(upper.isnull() | (original > upper), upper)
+            .else_(original)
+            .end()
+        )
+    elif (not isinstance(lower, ibis_types.NullScalar)) and isinstance(
+        upper, ibis_types.NullScalar
+    ):
+        return (
+            ibis.case()
+            .when(lower.isnull() | (original < lower), lower)
+            .else_(original)
+            .end()
+        )
+    elif isinstance(lower, ibis_types.NullScalar) and (
+        isinstance(upper, ibis_types.NullScalar)
+    ):
+        return original
+    else:
+        # Note: Pandas has unchanged behavior when upper bound and lower bound are flipped. This implementation requires that lower_bound < upper_bound
+        return (
+            ibis.case()
+            .when(lower.isnull() | (original < lower), lower)
+            .when(upper.isnull() | (original > upper), upper)
+            .else_(original)
+            .end()
+        )
