@@ -47,7 +47,7 @@ class Block:
         self,
         table: ibis_types.Table,
         columns: Sequence[ibis_types.Value] = (),
-        order_by_columns: Sequence[ibis_types.Value] = (),
+        order_by_columns: Sequence[ibis_types.Column] = (),
     ):
         self._table = table
         self._columns = list(columns)
@@ -90,7 +90,6 @@ class Block:
             for col, dtype in self.expr.to_ibis_expr()
             .schema()
             .items()
-            if col not in self.index_columns
         ]
         return [
             leanframe.dtypes.ibis_dtype_to_leanframe_dtype(ibis_dtype)

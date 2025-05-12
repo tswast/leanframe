@@ -101,9 +101,6 @@ class Context:
         be passed when creating a dataset / job. If not passed, falls back to the
         default inferred from the environment.
       location: Default location for jobs / datasets / tables.
-      bigquery_connection: Name of the BigQuery connection for the purpose of
-        remote udfs. It should be either pre created in `location`, or the user
-        should have privilege to create one.
     """
 
     def __init__(
@@ -111,12 +108,10 @@ class Context:
         credentials: Optional[google.auth.credentials.Credentials] = None,
         project: Optional[str] = None,
         location: Optional[str] = None,
-        bigquery_connection: Optional[str] = None,
     ):
         self._credentials = credentials
         self._project = project
         self._location = location
-        self._bigquery_connection = bigquery_connection
 
     @property
     def credentials(self) -> Optional[google.auth.credentials.Credentials]:
@@ -141,14 +136,6 @@ class Context:
     @location.setter
     def location(self, value: Optional[str]):
         self._location = value
-
-    @property
-    def bigquery_connection(self) -> Optional[str]:
-        return self._bigquery_connection
-
-    @bigquery_connection.setter
-    def bigquery_connection(self, value: Optional[str]):
-        self._bigquery_connection = value
 
 
 class Session:

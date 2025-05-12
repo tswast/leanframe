@@ -13,12 +13,8 @@
 # limitations under the License.
 
 from leanframe.core.indexes.implicitjoiner import ImplicitJoiner
-from leanframe.core.indexes.index import Index
 
-INDEX_COLUMN_ID = "leanframe_index_{}"
 
 __all__ = [
     "ImplicitJoiner",
-    "Index",
-    "INDEX_COLUMN_ID",
 ]
