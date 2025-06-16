@@ -30,33 +30,24 @@ from typing import (
     Union,
 )
 
-import google.cloud.bigquery as bigquery
 import ibis
 import ibis.expr.datatypes as ibis_dtypes
 import ibis.expr.types as ibis_types
 import pandas as pd
 
-import leanframe.aggregations as agg_ops
-import leanframe.core
-import leanframe.core.blocks as blocks
-import leanframe.core.groupby as groupby
-import leanframe.core.indexes as indexes
-import leanframe.core.joins as joins
-import leanframe.core.ordering as order
-import leanframe.operations.dtypes
-import leanframe.operations as ops
-import leanframe.series
-import third_party.leanframe_vendored.pandas.pandas.io.common as vendored_pandas_io_common
 
 
 class DataFrame:
     """A 2D data structure, representing data and deferred computation."""
 
-    def __init__( self):
-        pass
+    def __init__(self, data):
+        if isinstance(data, ibis_types.Table):
+            self._data = data
+        else:
+            raise NotImplementedError("DataFrame constructor doesn't support local data yet.")
 
     def to_pandas(self):
-        pass
+        return self._data.to_pandas()
 
     def to_gbq(self):
-        pass
+        return self._data

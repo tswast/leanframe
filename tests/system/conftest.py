@@ -20,8 +20,8 @@ from typing import cast, Dict, Generator, Optional
 import pytest
 from google.cloud import bigquery
 
-import leanframe.dataframe
-import leanframe.session
+import leanframe.core.frame
+import leanframe.core.session
 
 
 PERMANENT_DATASET = "leanframe_testing"
@@ -69,7 +69,7 @@ def load_test_data(
 
 
 def load_test_data_tables(
-    session: leanframe.session.Session, dataset_id_permanent: str
+    session: leanframe.core.session.Session, dataset_id_permanent: str
 ) -> Dict[str, str]:
     """Returns cached references to the test data tables in BigQuery. If no matching table is found
     for the hash of the data and schema, the table will be uploaded."""
@@ -117,15 +117,15 @@ def load_test_data_tables(
 
 
 @pytest.fixture(scope="session")
-def session() -> Generator[leanframe.session.Session, None, None]:
+def session() -> Generator[leanframe.core.session.Session, None, None]:
     context = leanframe.session.Context(location="US")
-    session = leanframe.session.Session(context=context)
+    session = leanframe.core.session.Session(context=context)
     yield session
     session.close()  # close generated session at cleanup time
 
 
 @pytest.fixture(scope="session")
-def bigquery_client(session: leanframe.session.Session) -> bigquery.Client:
+def bigquery_client(session: leanframe.core.session.Session) -> bigquery.Client:
     return session.bqclient
 
 
@@ -140,7 +140,7 @@ def dataset_id_permanent(bigquery_client: bigquery.Client, project_id: str) -> s
 
 @pytest.fixture(scope="session")
 def test_data_tables(
-    session: leanframe.session.Session, dataset_id_permanent: str
+    session: leanframe.core.session.Session, dataset_id_permanent: str
 ) -> Dict[str, str]:
     return load_test_data_tables(session, dataset_id_permanent)
 
@@ -152,7 +152,7 @@ def scalars_table_id(test_data_tables) -> str:
 
 @pytest.fixture(scope="session")
 def scalars_df(
-    scalars_table_id: str, session: leanframe.session.Session
-) -> leanframe.dataframe.DataFrame:
+    scalars_table_id: str, session: leanframe.core.session.Session
+) -> leanframe.core.frame.DataFrame:
     """DataFrame pointing at test data."""
     return session.read_gbq(scalars_table_id)
