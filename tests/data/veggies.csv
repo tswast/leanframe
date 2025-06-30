@@ -1,0 +1,11 @@
+VegetableName,DaysToMaturity,AverageHeight_m,OptimalpH,Family
+Tomato,70,1.8288,6.5,Solanaceae
+Carrot,,0.1524,6.0,Apiaceae
+Lettuce,45,0.3048,,Asteraceae
+Spinach,30,0.24384,6.5,
+Cucumber,60,2.4384,6.8,Cucurbitaceae
+Bell Pepper,90,,6.0,Solanaceae
+Onion,100,0.4572,6.0,Amaryllidaceae
+Potato,90,0.6096,5.5,
+Broccoli,60,0.762,6.5,Brassicaceae
+Corn,80,,,,Poaceae

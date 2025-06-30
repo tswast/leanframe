@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2025 Google LLC, LeanFrame Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""LeanFrame provides a DataFrame API scaled by the BigQuery engine."""
+"""LeanFrame provides a DataFrame API for BigQuery."""
 
+from leanframe.core.session import Session
 from leanframe.version import __version__
-
 
 __all__ = [
     "__version__",
+    "Session",
 ]

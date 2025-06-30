@@ -12,4 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.0.1"
+from __future__ import annotations
+
+import leanframe
+
+
+def test_read_sql_table_can_convert_to_pandas(session: leanframe.Session):
+    """Read a table with simple scalar values."""
+
+    df_lf = session.read_sql_table("veggies")
+    df_pd = df_lf.to_pandas()
+
+    # Make sure we have _some_ data.
+    assert len(df_pd.index) > 0
+    assert len(df_pd.columns) > 0

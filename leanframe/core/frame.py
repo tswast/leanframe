@@ -12,4 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.0.1"
+"""DataFrame is a two dimensional data structure."""
+
+from __future__ import annotations
+
+import ibis.expr.types as ibis_types
+import pandas
+
+
+
+class DataFrame:
+    """A 2D data structure, representing data and deferred computation."""
+
+    def __init__(self, data):
+        if isinstance(data, ibis_types.Table):
+            self._data = data
+        else:
+            raise NotImplementedError("DataFrame constructor doesn't support local data yet.")
+
+    def to_pandas(self) -> pandas.DataFrame:
+        return self._data.to_pandas()

@@ -12,4 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.0.1"
+import pathlib
+
+import ibis
+import pytest
+
+import leanframe
+
+
+CURRENT_DIR = pathlib.Path(__file__).parent
+DATA_DIR = CURRENT_DIR.parent / "data"
+
+
+@pytest.fixture(scope="session")
+def session() -> leanframe.Session:
+    """A Session based on a local engine for unit testing."""
+    backend = ibis.duckdb.connect()
+
+    # Create a few test tables before 
+    backend.raw_sql(
+        f"""
+        CREATE TABLE veggies AS
+        SELECT * FROM read_csv('{str(DATA_DIR / "veggies.csv")}');
+        """
+    )
+
+    return leanframe.Session(backend)

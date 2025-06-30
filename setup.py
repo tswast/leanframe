@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022 Google LLC, LeanFrame Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,6 +58,7 @@ dependencies = [
     "sqlglot >=23.6.3",
     "tabulate >=0.9",
     "ipywidgets >=7.7.1",
+    "ibis-framework>=10.3.1,<11.0.0",
     "humanize >=4.6.0",
     "matplotlib >=3.7.1",
     "db-dtypes >=1.4.2",
