@@ -18,8 +18,14 @@ from __future__ import annotations
 
 import ibis
 
+import leanframe.core.frame
+
+
 class Session:
-    """Session manages the connection to BigQuery."""
+    """Manages a connection to an ibis backend and emulates the pandas module.
+    
+    Defaults to BigQuery.
+    """
 
     def __init__(self, backend: ibis.BaseBackend | None):
         if backend is None:

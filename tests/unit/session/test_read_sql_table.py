@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2025 Google LLC, LeanFrame Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
 
-import pandas.testing
+import leanframe
 
 
-def test_fillna(scalars_dfs):
-    scalars_df, scalars_pandas_df = scalars_dfs
-    col_name = "string_col"
-    bf_result = scalars_df[col_name].fillna("Missing").to_pandas()
-    pd_result = scalars_pandas_df[col_name].fillna("Missing")
-    pandas.testing.assert_series_equal(
-        pd_result,
-        bf_result,
-    )
+def test_read_sql_table_can_convert_to_pandas(session: leanframe.Session):
+    """Read a table with simple scalar values."""
+
+    df_lf = session.read_sql_table("veggies")
+    df_pd = df_lf.to_pandas()
+
+    # Make sure we have _some_ data.
+    assert len(df_pd.index) > 0
+    assert len(df_pd.columns) > 0

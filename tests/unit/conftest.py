@@ -12,23 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""DataFrame is a two dimensional data structure."""
+import pathlib
 
-from __future__ import annotations
+import ibis
+import pytest
 
-import ibis.expr.types as ibis_types
-import pandas
+import leanframe
 
 
+CURRENT_DIR = pathlib.Path(__file__).parent
+DATA_DIR = CURRENT_DIR.parent / "data"
 
-class DataFrame:
-    """A 2D data structure, representing data and deferred computation."""
 
-    def __init__(self, data):
-        if isinstance(data, ibis_types.Table):
-            self._data = data
-        else:
-            raise NotImplementedError("DataFrame constructor doesn't support local data yet.")
+@pytest.fixture(scope="session")
+def session() -> leanframe.Session:
+    """A Session based on a local engine for unit testing."""
+    backend = ibis.duckdb.connect()
 
-    def to_pandas(self) -> pandas.DataFrame:
-        return self._data.to_pandas()
+    # Create a few test tables before 
+    backend.raw_sql(
+        f"""
+        CREATE TABLE veggies AS
+        SELECT * FROM read_csv('{str(DATA_DIR / "veggies.csv")}');
+        """
+    )
+
+    return leanframe.Session(backend)
