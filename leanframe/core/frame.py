@@ -30,5 +30,10 @@ class DataFrame:
         else:
             raise NotImplementedError("DataFrame constructor doesn't support local data yet.")
 
+    @property
+    def columns(self) -> pandas.Index:
+        """The column labels of the DataFrame."""
+        return pandas.Index(self._data.columns, dtype="object")
+
     def to_pandas(self) -> pandas.DataFrame:
         return self._data.to_pandas()
