@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import leanframe
 
+import pandas.testing
+
 
 def test_read_sql_table_can_convert_to_pandas(session: leanframe.Session):
     """Read a table with simple scalar values."""
@@ -26,3 +28,6 @@ def test_read_sql_table_can_convert_to_pandas(session: leanframe.Session):
     # Make sure we have _some_ data.
     assert len(df_pd.index) > 0
     assert len(df_pd.columns) > 0
+
+    # Where possible, check that we are compatible with pandas.
+    pandas.testing.assert_index_equal(df_pd.columns, df_lf.columns)
