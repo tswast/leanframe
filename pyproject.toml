@@ -13,7 +13,9 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ibis-framework[duckdb]>=10.6.0",
+    "ipython>=8.37.0",
     "pytest>=8.4.1",
+    "ruff>=0.12.4",
 ]
 
 [build-system]

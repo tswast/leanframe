@@ -20,20 +20,34 @@ import ibis.expr.types as ibis_types
 import pandas
 
 
-
 class DataFrame:
-    """A 2D data structure, representing data and deferred computation."""
+    """A 2D data structure, representing data and deferred computation.
 
-    def __init__(self, data):
-        if isinstance(data, ibis_types.Table):
-            self._data = data
-        else:
-            raise NotImplementedError("DataFrame constructor doesn't support local data yet.")
+    WARNING: Do not call this constructor directly. Use the factory methods on
+    Session, instead.
+    """
+
+    def __init__(self, data: ibis_types.Table):
+        self._data = data
 
     @property
     def columns(self) -> pandas.Index:
         """The column labels of the DataFrame."""
         return pandas.Index(self._data.columns, dtype="object")
+
+    def __getitem__(self, key: str):
+        """Get a column.
+
+        Note: direct row access via an Index is intentionally not implemented by
+        leanframe. Check out a project like Google's BigQuery DataFrames
+        (bigframes) if you require indexing.
+        """
+        import leanframe.core.series
+
+        # TODO(tswast): Support filtering by a boolean Series if we get a Series
+        # instead of a key? If so, the Series would have to be a column of the
+        # current DataFrame, only. No joins by index key are available.
+        return leanframe.core.series.Series(self._data[key])
 
     def to_pandas(self) -> pandas.DataFrame:
         return self._data.to_pandas()
