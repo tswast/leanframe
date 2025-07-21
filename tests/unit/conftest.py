@@ -29,7 +29,7 @@ def session() -> leanframe.Session:
     """A Session based on a local engine for unit testing."""
     backend = ibis.duckdb.connect()
 
-    # Create a few test tables before 
+    # Create a few test tables before
     backend.raw_sql(
         f"""
         CREATE TABLE veggies AS

@@ -16,14 +16,19 @@
 
 from __future__ import annotations
 
-import ibis
+import random
 
-import leanframe.core.frame
+import ibis
+import ibis.expr.types as ibis_types
+import pandas
+
+
+_ALPHABET = "abcdefghijklmnopqrstufwxyz"
 
 
 class Session:
     """Manages a connection to an ibis backend and emulates the pandas module.
-    
+
     Defaults to BigQuery.
     """
 
@@ -35,4 +40,22 @@ class Session:
         self._backend = backend
 
     def read_sql_table(self, table_name: str):
+        """Create a DataFrame pointing to the table called ``table_name``."""
+        import leanframe.core.frame
+
         return leanframe.core.frame.DataFrame(self._backend.table(table_name))
+
+    def DataFrame(self, data: ibis_types.Table | pandas.DataFrame):
+        """Construct a DataFrame."""
+        import leanframe.core.frame
+
+        if isinstance(data, ibis_types.Table):
+            return leanframe.core.frame.DataFrame(data)
+        elif isinstance(data, pandas.DataFrame):
+            table_name = f"lf_{''.join(random.choices(_ALPHABET, k=10))}"
+            table = self._backend.create_table(table_name, data, temp=True)
+            return leanframe.core.frame.DataFrame(table)
+        else:
+            raise NotImplementedError(
+                f"DataFrame constructor doesn't support {type(data)} data yet."
+            )
