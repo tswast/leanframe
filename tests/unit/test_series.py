@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import pandas
 import pandas.testing
+import pyarrow
 import pytest
 
 import leanframe
@@ -25,11 +26,13 @@ import leanframe
     ("series_pd",),
     (
         pytest.param(
-            pandas.Series([1, 2, 3]),
+            pandas.Series([1, 2, 3], dtype=pandas.ArrowDtype(pyarrow.int64())),
             id="int64",
         ),
         pytest.param(
-            pandas.Series([1.0, float("nan"), 3.0]),
+            pandas.Series(
+                [1.0, float("nan"), 3.0], dtype=pandas.ArrowDtype(pyarrow.float64())
+            ),
             id="float64",
         ),
     ),
