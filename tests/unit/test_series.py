@@ -25,23 +25,40 @@ import leanframe
 @pytest.mark.parametrize(
     ("column", "expected_dtype"),
     [
+        ("string_col", pd.ArrowDtype(pa.string())),
+        ("int_col", pd.ArrowDtype(pa.int64())),
+        ("array_col", pd.ArrowDtype(pa.list_(pa.int64()))),
         (
-            "string_col",
-            pd.ArrowDtype(pa.string()),
-        ),
-        (
-            "int_col",
-            pd.ArrowDtype(pa.int64()),
+            "struct_col",
+            pd.ArrowDtype(pa.struct([("a", pa.int64()), ("b", pa.string())])),
         ),
     ],
 )
 def test_series_dtype(session, column, expected_dtype):
-    pandas_df = pd.DataFrame(
+    pa_table = pa.Table.from_pydict(
         {
             "string_col": ["a", "b", "c"],
             "int_col": [1, 2, 3],
-        }
+            "array_col": [[1, 2], [3, 4], [5, 6]],
+            "struct_col": [
+                {"a": 1, "b": "c"},
+                {"a": 2, "b": "d"},
+                {"a": 3, "b": "e"},
+            ],
+        },
+        schema=pa.schema(
+            [
+                pa.field("string_col", pa.string()),
+                pa.field("int_col", pa.int64()),
+                pa.field("array_col", pa.list_(pa.int64())),
+                pa.field(
+                    "struct_col",
+                    pa.struct([("a", pa.int64()), ("b", pa.string())]),
+                ),
+            ]
+        ),
     )
+    pandas_df = pa_table.to_pandas(types_mapper=pd.ArrowDtype)
     df = session.DataFrame(pandas_df)
     series = df[column]
     assert series.dtype == expected_dtype
