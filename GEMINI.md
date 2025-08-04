@@ -1,21 +1,23 @@
 # Gemini Development Guide for leanframe
 
-This guide provides context for developing the `leanframe` project using LLM-based tools.
+This guide provides context for developing the `leanframe` project using
+LLM-based tools.
 
 ## Project Overview
 
-`leanframe` is a pandas-like API built on top of the Ibis project. It is intended to be a minimal wrapper around Ibis, providing a familiar interface for data manipulation without the more complex features of pandas.
+`leanframe` is a pandas-like API built on top of the Ibis project. It is
+intended to be a minimal wrapper around Ibis, providing a familiar interface for
+data manipulation without the more complex features of pandas.
 
 ## Getting Started
 
-To set up the development environment, you will need `uv`, which is a fast Python package installer and resolver.
+To set up the development environment, you will need `uv`, which is a fast
+Python package installer and resolver.
 
-1.  Install `uv`:
-    ```bash
-    pip install uv
-    ```
+1.  Install `uv`.
 
 2.  Create a virtual environment and install dependencies:
+
     ```bash
     uv sync
     ```
@@ -53,3 +55,10 @@ This project uses `pytest` for testing, `ruff` for linting and formatting, and `
 -   **`pytest`**: The testing framework.
 -   **`ruff`**: The linter and formatter.
 -   **`mypy`**: The static type checker.
+
+## Constraints
+
+- Only add git commits. Do not change git history.
+- When following a spec for development, check off the items with `[x]` as they
+  are completed.
+
