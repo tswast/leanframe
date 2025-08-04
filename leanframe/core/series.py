@@ -16,8 +16,10 @@
 
 from __future__ import annotations
 
-import pandas
 import ibis.expr.types as ibis_types
+import pandas as pd
+
+from leanframe.core.dtypes import convert_ibis_to_pandas
 
 
 class Series:
@@ -31,12 +33,17 @@ class Series:
         self._data = data
 
     @property
+    def dtype(self) -> pd.ArrowDtype:
+        """Return the dtype object of the underlying data."""
+        return convert_ibis_to_pandas(self._data.type())
+
+    @property
     def name(self) -> str:
         """Name of the column."""
         return self._data.get_name()
 
-    def to_pandas(self) -> pandas.Series:
+    def to_pandas(self) -> pd.Series:
         """Convert to a pandas Series."""
         return self._data.to_pyarrow().to_pandas(
-            types_mapper=lambda type_: pandas.ArrowDtype(type_)
+            types_mapper=lambda type_: pd.ArrowDtype(type_)
         )

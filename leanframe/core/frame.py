@@ -17,7 +17,9 @@
 from __future__ import annotations
 
 import ibis.expr.types as ibis_types
-import pandas
+import pandas as pd
+
+from leanframe.core.dtypes import convert_ibis_to_pandas
 
 
 class DataFrame:
@@ -31,9 +33,16 @@ class DataFrame:
         self._data = data
 
     @property
-    def columns(self) -> pandas.Index:
+    def columns(self) -> pd.Index:
         """The column labels of the DataFrame."""
-        return pandas.Index(self._data.columns, dtype="object")
+        return pd.Index(self._data.columns, dtype="object")
+
+    @property
+    def dtypes(self) -> pd.Series:
+        """Return the dtypes in the DataFrame."""
+        names = self._data.columns
+        types = [convert_ibis_to_pandas(t) for t in self._data.schema().types]
+        return pd.Series(types, index=names, name="dtypes")
 
     def __getitem__(self, key: str):
         """Get a column.
@@ -49,12 +58,12 @@ class DataFrame:
         # current DataFrame, only. No joins by index key are available.
         return leanframe.core.series.Series(self._data[key])
 
-    def to_pandas(self) -> pandas.DataFrame:
+    def to_pandas(self) -> pd.DataFrame:
         """Convert the DataFrame to a pandas.DataFrame.
 
         Where possible, pandas.ArrowDtype is used to avoid lossy conversions
         from the database types to pandas.
         """
         return self._data.to_pyarrow().to_pandas(
-            types_mapper=lambda type_: pandas.ArrowDtype(type_)
+            types_mapper=lambda type_: pd.ArrowDtype(type_)
         )
