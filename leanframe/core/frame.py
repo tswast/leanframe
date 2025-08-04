@@ -50,4 +50,11 @@ class DataFrame:
         return leanframe.core.series.Series(self._data[key])
 
     def to_pandas(self) -> pandas.DataFrame:
-        return self._data.to_pandas()
+        """Convert the DataFrame to a pandas.DataFrame.
+
+        Where possible, pandas.ArrowDtype is used to avoid lossy conversions
+        from the database types to pandas.
+        """
+        return self._data.to_pyarrow().to_pandas(
+            types_mapper=lambda type_: pandas.ArrowDtype(type_)
+        )

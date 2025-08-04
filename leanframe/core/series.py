@@ -37,4 +37,6 @@ class Series:
 
     def to_pandas(self) -> pandas.Series:
         """Convert to a pandas Series."""
-        return self._data.to_pandas()
+        return self._data.to_pyarrow().to_pandas(
+            types_mapper=lambda type_: pandas.ArrowDtype(type_)
+        )
