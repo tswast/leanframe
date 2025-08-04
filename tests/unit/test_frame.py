@@ -14,17 +14,47 @@
 
 from __future__ import annotations
 
-import pandas
+import pandas as pd
+import pandas.testing as tm
+import pyarrow as pa
 
 import leanframe
 import leanframe.core.series
+
+
+def test_dataframe_dtypes(session: leanframe.Session):
+    df_pd = pd.DataFrame(
+        {
+            "col1": [1, 2, 3],
+            "col2": ["a", "b", "c"],
+            "col3": [1.1, 2.2, 3.3],
+        }
+    ).astype(
+        {
+            "col1": pd.ArrowDtype(pa.int64()),
+            "col2": pd.ArrowDtype(pa.string()),
+            "col3": pd.ArrowDtype(pa.float64()),
+        }
+    )
+    df_lf = session.DataFrame(df_pd)
+    result = df_lf.dtypes
+    expected = pd.Series(
+        [
+            pd.ArrowDtype(pa.int64()),
+            pd.ArrowDtype(pa.string()),
+            pd.ArrowDtype(pa.float64()),
+        ],
+        index=["col1", "col2", "col3"],
+        name="dtypes",
+    )
+    tm.assert_series_equal(result, expected)
 
 
 def test_dataframe_getitem_with_column(session: leanframe.Session):
     """Read a table with simple scalar values."""
 
     df_lf = session.DataFrame(
-        pandas.DataFrame(
+        pd.DataFrame(
             {
                 "col1": [1, 2, 3],
                 "col2": ["a", "b", "c"],
