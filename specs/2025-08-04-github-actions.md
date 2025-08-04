@@ -14,8 +14,12 @@ if the developer doesn't remember to.
 
 ## Detailed Steps
 
-Follow the examples of the existing GitHub Actions, preferring official GitHub
-Actions plugins.
+- [ ] Configure `.github/workflows/lint.yml` to run on push and pull requests.
+- [ ] Add a job to `lint.yml` that checks out the code, sets up Python, and installs dependencies with `uv`.
+- [ ] Add a step to the `lint.yml` job to run the linter with `uv run ruff check`.
+- [ ] Configure `.github/workflows/mypy.yml` to run on push and pull requests.
+- [ ] Add a job to `mypy.yml` that checks out the code, sets up Python, and installs dependencies with `uv`.
+- [ ] Add a step to the `mypy.yml` job to run the type checker with `uv run mypy leanframe tests`.
 
 ## Verification
 
