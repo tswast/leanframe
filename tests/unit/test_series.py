@@ -89,3 +89,62 @@ def test_to_pandas(session: leanframe.Session, series_pd: pd.Series):
 
     # TODO(tswast): Allow input dtype != output dtype with an "expected_dtype" parameter.
     pd.testing.assert_series_equal(result, series_pd, check_names=False)
+
+
+@pytest.mark.parametrize(
+    ("op", "other", "expected_data"),
+    [
+        pytest.param(lambda s, o: s + o, 1, [2, 3, 4], id="add_scalar"),
+        pytest.param(lambda s, o: o + s, 1, [2, 3, 4], id="radd_scalar"),
+        pytest.param(lambda s, o: s * o, 2, [2, 4, 6], id="mul_scalar"),
+        pytest.param(lambda s, o: o * s, 2, [2, 4, 6], id="rmul_scalar"),
+    ],
+)
+def test_series_arithmetic_scalar(session, op, other, expected_data):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series_a = df["a"]
+
+    result_series = op(series_a, other)
+
+    expected_series = pd.Series(
+        expected_data,
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    pd.testing.assert_series_equal(
+        result_series.to_pandas(),
+        expected_series,
+        check_names=False,
+    )
+
+
+@pytest.mark.parametrize(
+    ("op", "expected_data"),
+    [
+        pytest.param(lambda s1, s2: s1 + s2, [5, 7, 9], id="add_series"),
+        pytest.param(lambda s1, s2: s1 * s2, [4, 10, 18], id="mul_series"),
+    ],
+)
+def test_series_arithmetic_series(session, op, expected_data):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3], "b": [4, 5, 6]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series_a = df["a"]
+    series_b = df["b"]
+
+    result_series = op(series_a, series_b)
+
+    expected_series = pd.Series(
+        expected_data,
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    pd.testing.assert_series_equal(
+        result_series.to_pandas(),
+        expected_series,
+        check_names=False,
+    )

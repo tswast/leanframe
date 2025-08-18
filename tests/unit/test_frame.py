@@ -100,3 +100,81 @@ def test_dataframe_getitem_with_column(session: leanframe.Session):
     assert isinstance(series_2, leanframe.core.series.Series)
     assert series_2.name == "col2"
     # TODO(tswast): check dtype
+
+
+def test_dataframe_assign_scalar(session: leanframe.Session):
+    df_pd = pd.DataFrame(
+        {
+            "col1": [1, 2, 3],
+            "col2": ["a", "b", "c"],
+        }
+    ).astype(
+        {
+            "col1": pd.ArrowDtype(pa.int64()),
+            "col2": pd.ArrowDtype(pa.string()),
+        }
+    )
+    df_lf = session.DataFrame(df_pd)
+    result_lf = df_lf.assign(col3=4)
+    expected_pd = df_pd.assign(col3=4).astype({"col3": pd.ArrowDtype(pa.int8())})
+    tm.assert_frame_equal(result_lf.to_pandas(), expected_pd)
+
+
+def test_dataframe_assign_series(session: leanframe.Session):
+    df_pd = pd.DataFrame(
+        {
+            "col1": [1, 2, 3],
+            "col2": ["a", "b", "c"],
+        }
+    ).astype(
+        {
+            "col1": pd.ArrowDtype(pa.int64()),
+            "col2": pd.ArrowDtype(pa.string()),
+        }
+    )
+    df_lf = session.DataFrame(df_pd)
+    series_pd = pd.Series([4, 5, 6], name="col3").astype(pd.ArrowDtype(pa.int64()))
+    series_lf = df_lf["col1"] + 3
+    result_lf = df_lf.assign(col3=series_lf)
+    expected_pd = df_pd.assign(col3=series_pd)
+    tm.assert_frame_equal(result_lf.to_pandas(), expected_pd)
+
+
+def test_dataframe_assign_multiple(session: leanframe.Session):
+    df_pd = pd.DataFrame(
+        {
+            "col1": [1, 2, 3],
+            "col2": ["a", "b", "c"],
+        }
+    ).astype(
+        {
+            "col1": pd.ArrowDtype(pa.int64()),
+            "col2": pd.ArrowDtype(pa.string()),
+        }
+    )
+    df_lf = session.DataFrame(df_pd)
+    series_pd = pd.Series([4, 5, 6], name="col3").astype(pd.ArrowDtype(pa.int64()))
+    series_lf = df_lf["col1"] + 3
+    result_lf = df_lf.assign(col3=series_lf, col4="d")
+    expected_pd = df_pd.assign(col3=series_pd, col4="d").astype(
+        {"col4": pd.ArrowDtype(pa.string())}
+    )
+    tm.assert_frame_equal(result_lf.to_pandas(), expected_pd)
+
+
+def test_dataframe_assign_overwrite(session: leanframe.Session):
+    df_pd = pd.DataFrame(
+        {
+            "col1": [1, 2, 3],
+            "col2": ["a", "b", "c"],
+        }
+    ).astype(
+        {
+            "col1": pd.ArrowDtype(pa.int64()),
+            "col2": pd.ArrowDtype(pa.string()),
+        }
+    )
+    df_lf = session.DataFrame(df_pd)
+    result_lf = df_lf.assign(col1=df_lf["col1"] * 2)
+    expected_pd = df_pd.assign(col1=df_pd["col1"] * 2)
+    tm.assert_frame_equal(result_lf.to_pandas(), expected_pd)

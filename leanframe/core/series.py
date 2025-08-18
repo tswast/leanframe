@@ -41,6 +41,18 @@ class Series:
     def name(self) -> str:
         """Name of the column."""
         return self._data.get_name()
+    
+    def __add__(self, other) -> Series:
+        return Series(self._data + getattr(other, "_data", other))
+    
+    def __radd__(self, other) -> Series:
+        return Series(getattr(other, "_data", other) + self._data)
+    
+    def __mul__(self, other) -> Series:
+        return Series(self._data * getattr(other, "_data", other))
+    
+    def __rmul__(self, other) -> Series:
+        return Series(getattr(other, "_data", other) * self._data)
 
     def to_pandas(self) -> pd.Series:
         """Convert to a pandas Series."""
