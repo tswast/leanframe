@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import ibis
 import ibis.expr.types as ibis_types
 import pandas as pd
 
@@ -57,6 +58,30 @@ class DataFrame:
         # instead of a key? If so, the Series would have to be a column of the
         # current DataFrame, only. No joins by index key are available.
         return leanframe.core.series.Series(self._data[key])
+
+    def assign(self, **kwargs):
+        """Assign new columns to a DataFrame.
+
+        This corresponds to the select() method in Ibis.
+
+        Args: 
+            kwargs:
+                The column names are keywords. If the values are not callable,
+                (e.g. a Series, scalar, or array), they are simply assigned.
+        """
+        named_exprs = {
+            name: self._data[name]
+            for name in self._data.columns
+        }
+        new_exprs = {}
+        for name, value in kwargs.items():
+            expr = getattr(value, "_data", None)
+            if expr is None:
+                expr = ibis.literal(value)
+            new_exprs[name] = expr
+            
+        named_exprs.update(new_exprs)
+        return DataFrame(self._data.select(**named_exprs))
 
     def to_pandas(self) -> pd.DataFrame:
         """Convert the DataFrame to a pandas.DataFrame.
