@@ -219,20 +219,48 @@ and check off the item with an x.
 
 ## Detailed Steps
 
-*Break down the implementation into small, actionable steps.*
-*This section will guide the development process.*
+This document outlines the steps to implement new Series methods. Follow these
+steps carefully.
 
-### 1. Step One
+### 1. Understand the Task
 
-- [ ] Choose a pandas method from the acceptance criteria.
-- [ ] Determine if the method is feasible. If not, x off the item with a not
-      about why it is infeasible. Otherwise, continue.
-- [ ] Add the method to `leanframe/core/series.py`.
+- [ ] **Read this document carefully**: Before you begin, read this entire
+      document (`specs/2025-09-16-series-methods.md`) to understand the scope
+      and requirements of the task.
 
-### 2. Step Two
+### 2. Implement a Method
 
-- [ ] Add unit tests to `tests/unit/test_series.py`.
-- [ ] Action 2.2
+- [ ] **Choose a method**: Select an unchecked method from the `Acceptance
+      Criteria` list above.
+- [ ] **Feasibility check**: Determine if the method is feasible to implement
+      given the constraints mentioned in the `Background` section.
+- [ ] **Mark as complete or infeasible**:
+    - If the method is **feasible**, continue to the next step.
+    - If the method is **not feasible**, mark it with an `x` in the `Acceptance
+      Criteria` list and add a brief note explaining why (e.g., `- [x]
+      pandas.Series.index -- not feasible, requires index`).
+- [ ] **Implement the method**: Add the method to `leanframe/core/series.py`.
+      Ensure your implementation is consistent with the existing codebase.
+- [ ] **Add unit tests**: Create comprehensive unit tests for the new method in
+      `tests/unit/test_series.py`. Cover edge cases and different data types.
+
+### 3. Verify Your Changes
+
+- [ ] **Run tests**: Execute all tests by running `uv run pytest tests` to
+      ensure your changes haven't introduced any regressions.
+- [ ] **Run static analysis**: Run `uv run mypy leanframe tests` and `uv run
+      ruff check` to check for type errors and linting issues.
+- [ ] **Mark the method as complete**: Once the implementation is complete and
+      all checks pass, edit this file (`specs/2025-09-16-series-methods.md`) and
+      mark the method you implemented with an `x` in the `Acceptance Criteria`
+      list.
+
+### 4. Finalizing for Submission
+
+- [ ] **Reset checkboxes**: Before submitting your pull request, uncheck all the
+      boxes in the `Acceptance Criteria` that you have marked with an `x` during
+      your work. The spec file should be in a clean state for the next
+      developer. Leave the originally checked items as they are.
 
 ## Verification
 
