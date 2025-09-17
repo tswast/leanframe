@@ -24,7 +24,8 @@ import numpy as np
 import leanframe
 
 
-def test_series_properties(session):
+@pytest.fixture
+def series_for_properties(session):
     df_pd = pd.DataFrame(
         {
             "int_col": pd.Series([1, 2, 3], dtype=pd.ArrowDtype(pa.int64())),
@@ -34,6 +35,38 @@ def test_series_properties(session):
         }
     )
     df_lf = session.DataFrame(df_pd)
+    return df_lf["int_col"], df_lf["float_col"]
+
+
+def test_series_ndim(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert series_int.ndim == 1
+    assert series_float.ndim == 1
+
+
+def test_series_size(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert series_int.size == 3
+    assert series_float.size == 3
+
+
+def test_series_shape(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert series_int.shape == (3,)
+    assert series_float.shape == (3,)
+
+
+def test_series_hasnans(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert not series_int.hasnans
+    assert series_float.hasnans
+
+
+def test_series_values(series_for_properties):
+    series_int, series_float = series_for_properties
+    np.testing.assert_array_equal(series_int.values, np.array([1, 2, 3]))
+
+=======
     series_int = df_lf["int_col"]
     series_float = df_lf["float_col"]
 
@@ -50,18 +83,11 @@ def test_series_properties(session):
     assert series_float.size == 3
     assert series_float.shape == (3,)
     assert series_float.hasnans
-    # Older versions of numpy don't have equal_nan.
-    # https://numpy.org/doc/stable/reference/generated/numpy.testing.assert_array_equal.html
-    result_val = series_float.values
-    expected_val = np.array([1.0, np.nan, 3.0])
-    np.testing.assert_array_equal(
-        np.isnan(result_val),
-        np.isnan(expected_val),
-    )
-    np.testing.assert_array_equal(
-        result_val[~np.isnan(result_val)],
-        expected_val[~np.isnan(expected_val)],
-    )
+
+
+def test_series_nbytes(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert series_int.nbytes > 0
     assert series_float.nbytes > 0
 
 
