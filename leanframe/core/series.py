@@ -66,7 +66,7 @@ class Series:
     @property
     def size(self) -> int:
         """Return the number of elements in the underlying data."""
-        return self._data.count().to_pyarrow().as_py()
+        return self._data.as_table().count().to_pyarrow().as_py()
 
     @property
     def hasnans(self) -> bool:
