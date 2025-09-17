@@ -19,7 +19,59 @@ import pandas.testing
 import pyarrow as pa
 import pytest
 
+import numpy as np
+
 import leanframe
+
+
+@pytest.fixture
+def series_for_properties(session):
+    df_pd = pd.DataFrame(
+        {
+            "int_col": pd.Series([1, 2, 3], dtype=pd.ArrowDtype(pa.int64())),
+            "float_col": pd.Series(
+                [1.0, float("nan"), 3.0], dtype=pd.ArrowDtype(pa.float64())
+            ),
+        }
+    )
+    df_lf = session.DataFrame(df_pd)
+    return df_lf["int_col"], df_lf["float_col"]
+
+
+def test_series_ndim(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert series_int.ndim == 1
+    assert series_float.ndim == 1
+
+
+def test_series_size(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert series_int.size == 3
+    assert series_float.size == 3
+
+
+def test_series_shape(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert series_int.shape == (3,)
+    assert series_float.shape == (3,)
+
+
+def test_series_hasnans(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert not series_int.hasnans
+    assert series_float.hasnans
+
+
+def test_series_values(series_for_properties):
+    series_int, series_float = series_for_properties
+    np.testing.assert_array_equal(series_int.values, np.array([1, 2, 3]))
+
+
+def test_series_nbytes(series_for_properties):
+    series_int, series_float = series_for_properties
+    
+    with pytest.raises(NotImplementedError, match="nbytes"):
+        assert series_int.nbytes
 
 
 @pytest.mark.parametrize(
