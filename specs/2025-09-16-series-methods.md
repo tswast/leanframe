@@ -19,15 +19,15 @@ and check off the item with an x.
 
 - [x] pandas.Series.index -- not feasible, requires index
 - [ ] pandas.Series.array
-- [ ] pandas.Series.values
+- [x] pandas.Series.values
 - [x] pandas.Series.dtype
-- [ ] pandas.Series.shape
-- [ ] pandas.Series.nbytes
-- [ ] pandas.Series.ndim
-- [ ] pandas.Series.size
+- [x] pandas.Series.shape
+- [x] pandas.Series.nbytes
+- [x] pandas.Series.ndim
+- [x] pandas.Series.size
 - [x] pandas.Series.T -- not feasible
 - [ ] pandas.Series.memory_usage
-- [ ] pandas.Series.hasnans
+- [x] pandas.Series.hasnans
 - [ ] pandas.Series.empty
 - [ ] pandas.Series.dtypes
 - [x] pandas.Series.name
