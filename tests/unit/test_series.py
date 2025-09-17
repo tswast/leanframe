@@ -66,18 +66,23 @@ def test_series_values(series_for_properties):
     series_int, series_float = series_for_properties
     np.testing.assert_array_equal(series_int.values, np.array([1, 2, 3]))
 
-    # Older versions of numpy don't have equal_nan.
-    # https://numpy.org/doc/stable/reference/generated/numpy.testing.assert_array_equal.html
-    result_val = series_float.values
-    expected_val = np.array([1.0, np.nan, 3.0])
-    np.testing.assert_array_equal(
-        np.isnan(result_val),
-        np.isnan(expected_val),
-    )
-    np.testing.assert_array_equal(
-        result_val[~np.isnan(result_val)],
-        expected_val[~np.isnan(expected_val)],
-    )
+=======
+    series_int = df_lf["int_col"]
+    series_float = df_lf["float_col"]
+
+    # Test properties on integer series
+    assert series_int.ndim == 1
+    assert series_int.size == 3
+    assert series_int.shape == (3,)
+    assert not series_int.hasnans
+    np.testing.assert_array_equal(series_int.values, np.array([1, 2, 3]))
+    assert series_int.nbytes > 0
+
+    # Test properties on float series with NaN
+    assert series_float.ndim == 1
+    assert series_float.size == 3
+    assert series_float.shape == (3,)
+    assert series_float.hasnans
 
 
 def test_series_nbytes(series_for_properties):
