@@ -19,7 +19,50 @@ import pandas.testing
 import pyarrow as pa
 import pytest
 
+import numpy as np
+
 import leanframe
+
+
+def test_series_properties(session):
+    df_pd = pd.DataFrame(
+        {
+            "int_col": pd.Series([1, 2, 3], dtype=pd.ArrowDtype(pa.int64())),
+            "float_col": pd.Series(
+                [1.0, float("nan"), 3.0], dtype=pd.ArrowDtype(pa.float64())
+            ),
+        }
+    )
+    df_lf = session.DataFrame(df_pd)
+    series_int = df_lf["int_col"]
+    series_float = df_lf["float_col"]
+
+    # Test properties on integer series
+    assert series_int.ndim == 1
+    assert series_int.size == 3
+    assert series_int.shape == (3,)
+    assert not series_int.hasnans
+    np.testing.assert_array_equal(series_int.values, np.array([1, 2, 3]))
+    assert series_int.nbytes > 0
+
+    # Test properties on float series with NaN
+    assert series_float.ndim == 1
+    assert series_float.size == 3
+    assert series_float.shape == (3,)
+    assert series_float.hasnans
+    # Older versions of numpy don't have equal_nan.
+    # https://numpy.org/doc/stable/reference/generated/numpy.testing.assert_array_equal.html
+    result_val = series_float.values
+    expected_val = np.array([1.0, np.nan, 3.0])
+    np.testing.assert_array_equal(
+        np.isnan(result_val),
+        np.isnan(expected_val),
+    )
+    np.testing.assert_array_equal(
+        result_val[~np.isnan(result_val)],
+        expected_val[~np.isnan(expected_val)],
+    )
+    assert series_float.nbytes > 0
 
 
 @pytest.mark.parametrize(

@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import ibis.expr.types as ibis_types
+import numpy as np
 import pandas as pd
 
 from leanframe.core.dtypes import convert_ibis_to_pandas
@@ -41,6 +42,36 @@ class Series:
     def name(self) -> str:
         """Name of the column."""
         return self._data.get_name()
+
+    @property
+    def values(self) -> np.ndarray:
+        """Return a numpy representation of the Series."""
+        return self._data.to_pyarrow().to_numpy()
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        """Return a tuple of the shape of the underlying data."""
+        return (self.size,)
+
+    @property
+    def nbytes(self) -> int:
+        """Return the number of bytes in the underlying data."""
+        return self._data.to_pyarrow().nbytes
+
+    @property
+    def ndim(self) -> int:
+        """Return the number of dimensions of the underlying data."""
+        return 1
+
+    @property
+    def size(self) -> int:
+        """Return the number of elements in the underlying data."""
+        return len(self._data.to_pyarrow())
+
+    @property
+    def hasnans(self) -> bool:
+        """Return True if there are any NaNs, False otherwise."""
+        return self._data.isnull().any().to_pyarrow().as_py()
     
     def __add__(self, other) -> Series:
         return Series(self._data + getattr(other, "_data", other))
