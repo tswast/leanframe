@@ -66,29 +66,12 @@ def test_series_values(series_for_properties):
     series_int, series_float = series_for_properties
     np.testing.assert_array_equal(series_int.values, np.array([1, 2, 3]))
 
-=======
-    series_int = df_lf["int_col"]
-    series_float = df_lf["float_col"]
-
-    # Test properties on integer series
-    assert series_int.ndim == 1
-    assert series_int.size == 3
-    assert series_int.shape == (3,)
-    assert not series_int.hasnans
-    np.testing.assert_array_equal(series_int.values, np.array([1, 2, 3]))
-    assert series_int.nbytes > 0
-
-    # Test properties on float series with NaN
-    assert series_float.ndim == 1
-    assert series_float.size == 3
-    assert series_float.shape == (3,)
-    assert series_float.hasnans
-
 
 def test_series_nbytes(series_for_properties):
     series_int, series_float = series_for_properties
-    assert series_int.nbytes > 0
-    assert series_float.nbytes > 0
+    
+    with pytest.raises(NotImplementedError, match="nbytes"):
+        assert series_int.nbytes
 
 
 @pytest.mark.parametrize(

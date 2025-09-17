@@ -56,7 +56,7 @@ class Series:
     @property
     def nbytes(self) -> int:
         """Return the number of bytes in the underlying data."""
-        return self._data.to_pyarrow().nbytes
+        raise NotImplementedError("nbytes not relevant for ibis expression.")
 
     @property
     def ndim(self) -> int:
@@ -66,7 +66,7 @@ class Series:
     @property
     def size(self) -> int:
         """Return the number of elements in the underlying data."""
-        return len(self._data.to_pyarrow())
+        return self._data.count().to_pyarrow().as_py()
 
     @property
     def hasnans(self) -> bool:
