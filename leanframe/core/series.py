@@ -94,6 +94,33 @@ class Series:
     def __rmul__(self, other) -> Series:
         return Series(getattr(other, "_data", other) * self._data)
 
+    def __round__(self, n) -> Series:
+        return Series(self._data.round(n))
+
+    def sum(self):
+        """Return the sum of the Series."""
+        return self._data.sum().to_pyarrow().as_py()
+
+    def mean(self):
+        """Return the mean of the Series."""
+        return self._data.mean().to_pyarrow().as_py()
+
+    def min(self):
+        """Return the min of the Series."""
+        return self._data.min().to_pyarrow().as_py()
+
+    def max(self):
+        """Return the max of the Series."""
+        return self._data.max().to_pyarrow().as_py()
+
+    def std(self):
+        """Return the std of the Series."""
+        return self._data.std().to_pyarrow().as_py()
+
+    def var(self):
+        """Return the var of the Series."""
+        return self._data.var().to_pyarrow().as_py()
+
     def copy(self) -> Series:
         """Return a copy of the Series."""
         return Series(self._data)

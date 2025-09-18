@@ -38,6 +38,17 @@ def series_for_properties(session):
     return df_lf["int_col"], df_lf["float_col"]
 
 
+@pytest.fixture
+def numeric_series(session):
+    df_pd = pd.DataFrame(
+        {
+            "a": [1, 2, 3, 4, 5],
+            "b": [1.1, 2.2, 3.3, 4.4, 5.5],
+        }
+    )
+    return session.DataFrame(df_pd)
+
+
 def test_series_ndim(series_for_properties):
     series_int, series_float = series_for_properties
     assert series_int.ndim == 1
@@ -187,6 +198,52 @@ def test_series_arithmetic_scalar(session, op, other, expected_data):
         expected_series,
         check_names=False,
     )
+
+
+def test_series_round(numeric_series):
+    series = numeric_series["b"]
+    result = round(series, 0)
+    expected = pd.Series(
+        [1.0, 2.0, 3.0, 4.0, 6.0],
+        dtype=pd.ArrowDtype(pa.float64()),
+    )
+    result_pd = result.to_pandas()
+    result_pd = result_pd.astype(pd.ArrowDtype(pa.float64()))
+    pd.testing.assert_series_equal(
+        result_pd,
+        expected,
+        check_names=False,
+    )
+
+
+def test_series_sum(numeric_series):
+    series = numeric_series["a"]
+    assert series.sum() == 15
+
+
+def test_series_mean(numeric_series):
+    series = numeric_series["a"]
+    assert series.mean() == 3.0
+
+
+def test_series_min(numeric_series):
+    series = numeric_series["a"]
+    assert series.min() == 1
+
+
+def test_series_max(numeric_series):
+    series = numeric_series["a"]
+    assert series.max() == 5
+
+
+def test_series_std(numeric_series):
+    series = numeric_series["b"]
+    assert round(series.std(), 2) == 1.74
+
+
+def test_series_var(numeric_series):
+    series = numeric_series["b"]
+    assert round(series.var(), 2) == 3.03
 
 
 def test_series_copy(session):
