@@ -19,7 +19,6 @@ from __future__ import annotations
 import ibis.expr.types as ibis_types
 import numpy as np
 import pandas as pd
-
 from leanframe.core.dtypes import convert_ibis_to_pandas
 
 
@@ -49,6 +48,11 @@ class Series:
         return self._data.to_pyarrow().to_numpy()
 
     @property
+    def array(self) -> "pd.api.extensions.ExtensionArray":
+        """Return the underlying data as a pandas ExtensionArray."""
+        return self.to_pandas().array
+
+    @property
     def shape(self) -> tuple[int, ...]:
         """Return a tuple of the shape of the underlying data."""
         return (self.size,)
@@ -72,6 +76,11 @@ class Series:
     def hasnans(self) -> bool:
         """Return True if there are any NaNs, False otherwise."""
         return self._data.isnull().any().to_pyarrow().as_py()
+
+    @property
+    def empty(self) -> bool:
+        """Return True if the Series is empty, False otherwise."""
+        return self.size == 0
     
     def __add__(self, other) -> Series:
         return Series(self._data + getattr(other, "_data", other))
@@ -85,8 +94,24 @@ class Series:
     def __rmul__(self, other) -> Series:
         return Series(getattr(other, "_data", other) * self._data)
 
+    def copy(self) -> Series:
+        """Return a copy of the Series."""
+        return Series(self._data)
+
     def to_pandas(self) -> pd.Series:
         """Convert to a pandas Series."""
         return self._data.to_pyarrow().to_pandas(
             types_mapper=lambda type_: pd.ArrowDtype(type_)
         )
+
+    def to_numpy(self) -> np.ndarray:
+        """Return a numpy representation of the Series."""
+        return self.values
+
+    def to_list(self) -> list:
+        """Return a list of the values."""
+        return self.to_pandas().to_list()
+
+    def __iter__(self):
+        """Return an iterator of the values."""
+        return iter(self.to_list())

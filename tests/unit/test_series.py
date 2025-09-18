@@ -62,9 +62,25 @@ def test_series_hasnans(series_for_properties):
     assert series_float.hasnans
 
 
+def test_series_empty(session):
+    df_pd = pd.DataFrame({"col1": [1, 2, 3]})
+    df_lf = session.DataFrame(df_pd)
+    assert not df_lf["col1"].empty
+
+    df_pd_empty = pd.DataFrame({"col1": []})
+    df_lf_empty = session.DataFrame(df_pd_empty)
+    assert df_lf_empty["col1"].empty
+
+
 def test_series_values(series_for_properties):
     series_int, series_float = series_for_properties
     np.testing.assert_array_equal(series_int.values, np.array([1, 2, 3]))
+
+
+def test_series_array(series_for_properties):
+    series_int, series_float = series_for_properties
+    expected_array = pd.array([1, 2, 3], dtype=pd.ArrowDtype(pa.int64()))
+    pd.testing.assert_extension_array_equal(series_int.array, expected_array)
 
 
 def test_series_nbytes(series_for_properties):
@@ -171,6 +187,30 @@ def test_series_arithmetic_scalar(session, op, other, expected_data):
         expected_series,
         check_names=False,
     )
+
+
+def test_series_copy(session):
+    df_pd = pd.DataFrame({"col1": [1, 2, 3]})
+    df_lf = session.DataFrame(df_pd)
+    series = df_lf["col1"]
+    series_copy = series.copy()
+    assert series is not series_copy
+    assert series._data is series_copy._data
+
+
+def test_series_to_numpy(series_for_properties):
+    series_int, series_float = series_for_properties
+    np.testing.assert_array_equal(series_int.to_numpy(), np.array([1, 2, 3]))
+
+
+def test_series_to_list(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert series_int.to_list() == [1, 2, 3]
+
+
+def test_series_iter(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert list(iter(series_int)) == [1, 2, 3]
 
 
 @pytest.mark.parametrize(
