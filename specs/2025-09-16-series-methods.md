@@ -72,7 +72,7 @@ and check off the item with an x.
 - [ ] pandas.Series.rpow
 - [ ] pandas.Series.combine
 - [ ] pandas.Series.combine_first
-- [ ] pandas.Series.round
+- [x] pandas.Series.round
 - [ ] pandas.Series.lt
 - [ ] pandas.Series.gt
 - [ ] pandas.Series.le
@@ -108,10 +108,10 @@ and check off the item with an x.
 - [ ] pandas.Series.diff
 - [ ] pandas.Series.factorize
 - [ ] pandas.Series.kurt
-- [ ] pandas.Series.max
-- [ ] pandas.Series.mean
+- [x] pandas.Series.max
+- [x] pandas.Series.mean
 - [ ] pandas.Series.median
-- [ ] pandas.Series.min
+- [x] pandas.Series.min
 - [ ] pandas.Series.mode
 - [ ] pandas.Series.nlargest
 - [ ] pandas.Series.nsmallest
@@ -121,9 +121,9 @@ and check off the item with an x.
 - [ ] pandas.Series.rank
 - [ ] pandas.Series.sem
 - [ ] pandas.Series.skew
-- [ ] pandas.Series.std
-- [ ] pandas.Series.sum
-- [ ] pandas.Series.var
+- [x] pandas.Series.std
+- [x] pandas.Series.sum
+- [x] pandas.Series.var
 - [ ] pandas.Series.kurtosis
 - [ ] pandas.Series.unique
 - [ ] pandas.Series.nunique
