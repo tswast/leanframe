@@ -49,6 +49,19 @@ def numeric_series(session):
     return session.DataFrame(df_pd)
 
 
+@pytest.fixture
+def bool_series(session):
+    df_pd = pd.DataFrame(
+        {
+            "all_true": [True, True, True],
+            "some_true": [True, False, True],
+            "all_false": [False, False, False],
+        },
+        dtype=pd.ArrowDtype(pa.bool_()),
+    )
+    return session.DataFrame(df_pd)
+
+
 def test_series_ndim(series_for_properties):
     series_int, series_float = series_for_properties
     assert series_int.ndim == 1
@@ -200,6 +213,58 @@ def test_series_arithmetic_scalar(session, op, other, expected_data):
     )
 
 
+def test_series_abs(session):
+    pandas_df = pd.DataFrame(
+        {"a": [-1, 2, -3]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.abs()
+    expected = pd.Series(
+        [1, 2, 3],
+        name="a",
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
+
+
+def test_series_astype(session):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.astype(pd.ArrowDtype(pa.float64()))
+    expected = pd.Series(
+        [1.0, 2.0, 3.0],
+        name="a",
+        dtype=pd.ArrowDtype(pa.float64()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
+
+
+def test_series_all(bool_series):
+    assert bool_series["all_true"].all()
+    assert not bool_series["some_true"].all()
+    assert not bool_series["all_false"].all()
+
+
+def test_series_any(bool_series):
+    assert bool_series["all_true"].any()
+    assert bool_series["some_true"].any()
+    assert not bool_series["all_false"].any()
+
+
 def test_series_round(numeric_series):
     series = numeric_series["b"]
     result = round(series, 0)
@@ -244,6 +309,32 @@ def test_series_std(numeric_series):
 def test_series_var(numeric_series):
     series = numeric_series["b"]
     assert round(series.var(), 2) == 3.03
+
+
+def test_series_count(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert series_int.count() == 3
+    assert series_float.count() == 2
+
+
+def test_series_isin(session):
+    pandas_df = pd.DataFrame(
+        {"a": ["a", "b", "c"]},
+        dtype=pd.ArrowDtype(pa.string()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.isin(["a", "c"])
+    expected = pd.Series(
+        [True, False, True],
+        name="a",
+        dtype=pd.ArrowDtype(pa.bool_()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
 
 
 def test_series_copy(session):

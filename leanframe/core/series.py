@@ -19,7 +19,7 @@ from __future__ import annotations
 import ibis.expr.types as ibis_types
 import numpy as np
 import pandas as pd
-from leanframe.core.dtypes import convert_ibis_to_pandas
+from leanframe.core.dtypes import convert_ibis_to_pandas, convert_pandas_to_ibis
 
 
 class Series:
@@ -97,6 +97,18 @@ class Series:
     def __round__(self, n) -> Series:
         return Series(self._data.round(n))
 
+    def abs(self) -> "Series":
+        """Return a Series with the absolute value of each element."""
+        return Series(self._data.abs())
+
+    def all(self) -> bool:
+        """Return whether all elements are True."""
+        return self._data.all().to_pyarrow().as_py()
+
+    def any(self) -> bool:
+        """Return whether any element is True."""
+        return self._data.any().to_pyarrow().as_py()
+
     def sum(self):
         """Return the sum of the Series."""
         return self._data.sum().to_pyarrow().as_py()
@@ -121,9 +133,22 @@ class Series:
         """Return the var of the Series."""
         return self._data.var().to_pyarrow().as_py()
 
+    def count(self) -> int:
+        """Return the number of non-null observations in the Series."""
+        return self._data.count().to_pyarrow().as_py()
+
     def copy(self) -> Series:
         """Return a copy of the Series."""
         return Series(self._data)
+
+    def isin(self, values) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is exactly contained in the passed sequence of values."""
+        return Series(self._data.isin(values))
+
+    def astype(self, dtype: pd.ArrowDtype) -> "Series":
+        """Cast a Series to a specified dtype."""
+        ibis_type = convert_pandas_to_ibis(dtype)
+        return Series(self._data.cast(ibis_type))
 
     def to_pandas(self) -> pd.Series:
         """Convert to a pandas Series."""
