@@ -27,3 +27,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["./"]
 include = ["leanframe"]
+
+[tool.ruff]
+exclude = ["scratch", "vault"]
