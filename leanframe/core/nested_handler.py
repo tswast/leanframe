@@ -6,7 +6,9 @@ This provides a truly dynamic handler that can introspect any DataFrame
 and automatically handle nested columns of any depth and structure.
 """
 
-from typing import Dict, Any, List, Optional, Iterator
+from __future__ import annotations
+
+from typing import Dict, Any, List, Optional, Iterator, Set
 from .frame import DataFrame
 
 
@@ -28,8 +30,8 @@ class DynamicNestedHandler:
     def __init__(self, lf_df: DataFrame, max_depth: int = 10):
         self.original_df = lf_df
         self.max_depth = max_depth
-        self.nested_fields = {}  # Maps original_path -> extracted_column_name
-        self.struct_columns = set()  # Track which columns are structs
+        self.nested_fields: Dict[str, Dict] = {}  # Maps original_path -> extracted_column_name
+        self.struct_columns: Set[str] = set()  # Track which columns are structs
         self.extracted_df = lf_df  # Initialize with original, will be replaced
         self._arrow_cache = None
 
