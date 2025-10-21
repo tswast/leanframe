@@ -60,6 +60,7 @@ def create_df_complex(session: leanframe.Session) -> DataFrame:
     df_lf = session.DataFrame(df_pd)
     return df_lf
 
+
 if __name__ == "__main__":
     backend = ibis.duckdb.connect()
     session = leanframe.Session(backend=backend)

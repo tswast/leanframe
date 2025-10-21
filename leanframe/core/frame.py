@@ -64,22 +64,19 @@ class DataFrame:
 
         This corresponds to the select() method in Ibis.
 
-        Args: 
+        Args:
             kwargs:
                 The column names are keywords. If the values are not callable,
                 (e.g. a Series, scalar, or array), they are simply assigned.
         """
-        named_exprs = {
-            name: self._data[name]
-            for name in self._data.columns
-        }
+        named_exprs = {name: self._data[name] for name in self._data.columns}
         new_exprs = {}
         for name, value in kwargs.items():
             expr = getattr(value, "_data", None)
             if expr is None:
                 expr = ibis.literal(value)
             new_exprs[name] = expr
-            
+
         named_exprs.update(new_exprs)
         return DataFrame(self._data.select(**named_exprs))
 
