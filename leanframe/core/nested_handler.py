@@ -163,7 +163,7 @@ class DynamicNestedHandler:
         """Get cached PyArrow table for efficient access."""
         if self._arrow_cache is None:
             reader = self.extracted_df._data.to_pyarrow()
-            self._arrow_cache = reader.read_all()
+            self._arrow_cache = reader
         return self._arrow_cache
 
     # Public API - same as before but now completely dynamic
