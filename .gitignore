@@ -176,3 +176,4 @@ cython_debug/
 # Staging areas
 scratch/
 vault/
+.python-version
