@@ -14,18 +14,18 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 
 ### Attributes
 
-- [ ] T
-- [ ] at
+- [x] T -- not feasible, requires index
+- [x] at -- not feasible, requires index
 - [ ] attrs
-- [ ] axes
-- [ ] columns
-- [ ] dtypes
+- [x] axes -- not feasible, requires index
+- [x] columns
+- [x] dtypes
 - [ ] empty
 - [ ] flags
-- [ ] iat
-- [ ] iloc
-- [ ] index
-- [ ] loc
+- [x] iat -- not feasible, requires index
+- [x] iloc -- not feasible, requires index
+- [x] index -- not feasible, requires index
+- [x] loc -- not feasible, requires index
 - [ ] ndim
 - [ ] shape
 - [ ] size
@@ -40,25 +40,25 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 - [ ] add_suffix(suffix[, axis])
 - [ ] agg([func, axis])
 - [ ] aggregate([func, axis])
-- [ ] align(other[, join, axis, level, copy, ...])
+- [x] align(other[, join, axis, level, copy, ...]) -- not feasible, requires index
 - [ ] all([axis, bool_only, skipna])
 - [ ] any(*[, axis, bool_only, skipna])
 - [ ] apply(func[, axis, raw, result_type, args, ...])
 - [ ] applymap(func[, na_action])
 - [ ] asfreq(freq[, method, how, normalize, ...])
 - [ ] asof(where[, subset])
-- [ ] assign(**kwargs)
+- [x] assign(**kwargs)
 - [ ] astype(dtype[, copy, errors])
-- [ ] at_time(time[, asof, axis])
+- [x] at_time(time[, asof, axis]) -- not feasible, requires index
 - [ ] backfill(*[, axis, inplace, limit, downcast])
-- [ ] between_time(start_time, end_time[, ...])
+- [x] between_time(start_time, end_time[, ...]) -- not feasible, requires index
 - [ ] bfill(*[, axis, inplace, limit, limit_area, ...])
 - [ ] bool()
 - [ ] boxplot([column, by, ax, fontsize, rot, ...])
 - [ ] clip([lower, upper, axis, inplace])
 - [ ] combine(other, func[, fill_value, overwrite])
 - [ ] combine_first(other)
-- [ ] compare(other[, align_axis, keep_shape, ...])
+- [x] compare(other[, align_axis, keep_shape, ...]) -- not feasible, requires index
 - [ ] convert_dtypes([infer_objects, ...])
 - [ ] copy([deep])
 - [ ] corr([method, min_periods, numeric_only])
@@ -76,7 +76,7 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 - [ ] dot(other)
 - [ ] drop([labels, axis, index, columns, level, ...])
 - [ ] drop_duplicates([subset, keep, inplace, ...])
-- [ ] droplevel(level[, axis])
+- [x] droplevel(level[, axis]) -- not feasible, requires index
 - [ ] dropna(*[, axis, how, thresh, subset, ...])
 - [ ] duplicated([subset, keep])
 - [ ] eq(other[, axis, level])
@@ -89,35 +89,35 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 - [ ] fillna([value, method, axis, inplace, ...])
 - [ ] filter([items, like, regex, axis])
 - [ ] first(offset)
-- [ ] first_valid_index()
+- [x] first_valid_index() -- not feasible, requires index
 - [ ] floordiv(other[, axis, level, fill_value])
-- [ ] from_dict(data[, orient, dtype, columns])
-- [ ] from_records(data[, index, exclude, ...])
+- [x] from_dict(data[, orient, dtype, columns]) -- not feasible, requires index
+- [x] from_records(data[, index, exclude, ...]) -- not feasible, requires index
 - [ ] ge(other[, axis, level])
 - [ ] get(key[, default])
 - [ ] groupby([by, axis, level, as_index, sort, ...])
 - [ ] gt(other[, axis, level])
 - [ ] head([n])
 - [ ] hist([column, by, grid, xlabelsize, xrot, ...])
-- [ ] idxmax([axis, skipna, numeric_only])
-- [ ] idxmin([axis, skipna, numeric_only])
+- [x] idxmax([axis, skipna, numeric_only]) -- not feasible, requires index
+- [x] idxmin([axis, skipna, numeric_only]) -- not feasible, requires index
 - [ ] infer_objects([copy])
 - [ ] info([verbose, buf, max_cols, memory_usage, ...])
 - [ ] insert(loc, column, value[, allow_duplicates])
 - [ ] interpolate([method, axis, limit, inplace, ...])
-- [ ] isetitem(loc, value)
+- [x] isetitem(loc, value) -- not feasible, requires index
 - [ ] isin(values)
 - [ ] isna()
 - [ ] isnull()
 - [ ] items()
-- [ ] iterrows()
-- [ ] itertuples([index, name])
+- [x] iterrows() -- not feasible, requires index
+- [x] itertuples([index, name]) -- not feasible, requires index
 - [ ] join(other[, on, how, lsuffix, rsuffix, ...])
 - [ ] keys()
 - [ ] kurt([axis, skipna, numeric_only])
 - [ ] kurtosis([axis, skipna, numeric_only])
 - [ ] last(offset)
-- [ ] last_valid_index()
+- [x] last_valid_index() -- not feasible, requires index
 - [ ] le(other[, axis, level])
 - [ ] lt(other[, axis, level])
 - [ ] map(func[, na_action])
@@ -126,7 +126,7 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 - [ ] mean([axis, skipna, numeric_only])
 - [ ] median([axis, skipna, numeric_only])
 - [ ] melt([id_vars, value_vars, var_name, ...])
-- [ ] memory_usage([index, deep])
+- [x] memory_usage([index, deep]) -- not feasible, requires index
 - [ ] merge(right[, how, on, left_on, right_on, ...])
 - [ ] min([axis, skipna, numeric_only])
 - [ ] mod(other[, axis, level, fill_value])
@@ -142,8 +142,8 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 - [ ] pad(*[, axis, inplace, limit, downcast])
 - [ ] pct_change([periods, fill_method, limit, freq])
 - [ ] pipe(func, *args, **kwargs)
-- [ ] pivot(*, columns[, index, values])
-- [ ] pivot_table([values, index, columns, ...])
+- [x] pivot(*, columns[, index, values]) -- not feasible, requires index
+- [x] pivot_table([values, index, columns, ...]) -- not feasible, requires index
 - [ ] pop(item)
 - [ ] pow(other[, axis, level, fill_value])
 - [ ] prod([axis, skipna, numeric_only, min_count])
@@ -153,14 +153,14 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 - [ ] radd(other[, axis, level, fill_value])
 - [ ] rank([axis, method, numeric_only, ...])
 - [ ] rdiv(other[, axis, level, fill_value])
-- [ ] reindex([labels, index, columns, axis, ...])
-- [ ] reindex_like(other[, method, copy, limit, ...])
+- [x] reindex([labels, index, columns, axis, ...]) -- not feasible, requires index
+- [x] reindex_like(other[, method, copy, limit, ...]) -- not feasible, requires index
 - [ ] rename([mapper, index, columns, axis, copy, ...])
-- [ ] rename_axis([mapper, index, columns, axis, ...])
-- [ ] reorder_levels(order[, axis])
+- [x] rename_axis([mapper, index, columns, axis, ...]) -- not feasible, requires index
+- [x] reorder_levels(order[, axis]) -- not feasible, requires index
 - [ ] replace([to_replace, value, inplace, limit, ...])
 - [ ] resample(rule[, axis, closed, label, ...])
-- [ ] reset_index([level, drop, inplace, ...])
+- [x] reset_index([level, drop, inplace, ...]) -- not feasible, requires index
 - [ ] rfloordiv(other[, axis, level, fill_value])
 - [ ] rmod(other[, axis, level, fill_value])
 - [ ] rmul(other[, axis, level, fill_value])
@@ -172,23 +172,23 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 - [ ] sample([n, frac, replace, weights, ...])
 - [ ] select_dtypes([include, exclude])
 - [ ] sem([axis, skipna, ddof, numeric_only])
-- [ ] set_axis(labels, *[, axis, copy])
+- [x] set_axis(labels, *[, axis, copy]) -- not feasible, requires index
 - [ ] set_flags(*[, copy, allows_duplicate_labels])
-- [ ] set_index(keys, *[, drop, append, inplace, ...])
+- [x] set_index(keys, *[, drop, append, inplace, ...]) -- not feasible, requires index
 - [ ] shift([periods, freq, axis, fill_value, suffix])
 - [ ] skew([axis, skipna, numeric_only])
-- [ ] sort_index(*[, axis, level, ascending, ...])
+- [x] sort_index(*[, axis, level, ascending, ...]) -- not feasible, requires index
 - [ ] sort_values(by, *[, axis, ascending, ...])
 - [ ] squeeze([axis])
-- [ ] stack([level, dropna, sort, future_stack])
+- [x] stack([level, dropna, sort, future_stack]) -- not feasible, requires index
 - [ ] std([axis, skipna, ddof, numeric_only])
 - [ ] sub(other[, axis, level, fill_value])
 - [ ] subtract(other[, axis, level, fill_value])
 - [ ] sum([axis, skipna, numeric_only, min_count])
-- [ ] swapaxes(axis1, axis2[, copy])
-- [ ] swaplevel([i, j, axis])
+- [x] swapaxes(axis1, axis2[, copy]) -- not feasible, requires index
+- [x] swaplevel([i, j, axis]) -- not feasible, requires index
 - [ ] tail([n])
-- [ ] take(indices[, axis])
+- [x] take(indices[, axis]) -- not feasible, requires index
 - [ ] to_clipboard(*[, excel, sep])
 - [ ] to_csv([path_or_buf, sep, na_rep, ...])
 - [ ] to_dict([orient, into, index])
@@ -213,17 +213,17 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 - [ ] to_xarray()
 - [ ] to_xml([path_or_buffer, index, root_name, ...])
 - [ ] transform(func[, axis])
-- [ ] transpose(*args[, copy])
+- [x] transpose(*args[, copy]) -- not feasible, requires index
 - [ ] truediv(other[, axis, level, fill_value])
-- [ ] truncate([before, after, axis, copy])
-- [ ] tz_convert(tz[, axis, level, copy])
-- [ ] tz_localize(tz[, axis, level, copy, ...])
-- [ ] unstack([level, fill_value, sort])
-- [ ] update(other[, join, overwrite, ...])
+- [x] truncate([before, after, axis, copy]) -- not feasible, requires index
+- [x] tz_convert(tz[, axis, level, copy]) -- not feasible, requires index
+- [x] tz_localize(tz[, axis, level, copy, ...]) -- not feasible, requires index
+- [x] unstack([level, fill_value, sort]) -- not feasible, requires index
+- [x] update(other[, join, overwrite, ...]) -- not feasible, requires index
 - [ ] value_counts([subset, normalize, sort, ...])
 - [ ] var([axis, skipna, ddof, numeric_only])
 - [ ] where(cond[, other, inplace, axis, level])
-- [ ] xs(key[, axis, level, drop_level])
+- [x] xs(key[, axis, level, drop_level]) -- not feasible, requires index
 
 ## Detailed Steps
 
