@@ -94,6 +94,48 @@ class Series:
     def __rmul__(self, other) -> Series:
         return Series(getattr(other, "_data", other) * self._data)
 
+    def __lt__(self, other) -> Series:
+        return Series(self._data < getattr(other, "_data", other))
+
+    def __gt__(self, other) -> Series:
+        return Series(self._data > getattr(other, "_data", other))
+
+    def __le__(self, other) -> Series:
+        return Series(self._data <= getattr(other, "_data", other))
+
+    def __ge__(self, other) -> Series:
+        return Series(self._data >= getattr(other, "_data", other))
+
+    def __ne__(self, other) -> Series:  # type: ignore[override]
+        return Series(self._data != getattr(other, "_data", other))
+
+    def __eq__(self, other) -> Series:  # type: ignore[override]
+        return Series(self._data == getattr(other, "_data", other))
+
+    def lt(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is less than the other."""
+        return self < other
+
+    def gt(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is greater than the other."""
+        return self > other
+
+    def le(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is less than or equal to the other."""
+        return self <= other
+
+    def ge(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is greater than or equal to the other."""
+        return self >= other
+
+    def ne(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is not equal to the other."""
+        return self != other
+
+    def eq(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is equal to the other."""
+        return self == other
+
     def __round__(self, n) -> Series:
         return Series(self._data.round(n))
 

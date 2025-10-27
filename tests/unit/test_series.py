@@ -213,6 +213,83 @@ def test_series_arithmetic_scalar(session, op, other, expected_data):
     )
 
 
+@pytest.mark.parametrize(
+    ("op", "other", "expected_data"),
+    [
+        pytest.param(lambda s, o: s < o, 3, [True, True, False, False, False], id="lt_scalar"),
+        pytest.param(lambda s, o: s.lt(o), 3, [True, True, False, False, False], id="lt_method_scalar"),
+        pytest.param(lambda s, o: s > o, 3, [False, False, False, True, True], id="gt_scalar"),
+        pytest.param(lambda s, o: s.gt(o), 3, [False, False, False, True, True], id="gt_method_scalar"),
+        pytest.param(lambda s, o: s <= o, 3, [True, True, True, False, False], id="le_scalar"),
+        pytest.param(lambda s, o: s.le(o), 3, [True, True, True, False, False], id="le_method_scalar"),
+        pytest.param(lambda s, o: s >= o, 3, [False, False, True, True, True], id="ge_scalar"),
+        pytest.param(lambda s, o: s.ge(o), 3, [False, False, True, True, True], id="ge_method_scalar"),
+        pytest.param(lambda s, o: s != o, 3, [True, True, False, True, True], id="ne_scalar"),
+        pytest.param(lambda s, o: s.ne(o), 3, [True, True, False, True, True], id="ne_method_scalar"),
+        pytest.param(lambda s, o: s == o, 3, [False, False, True, False, False], id="eq_scalar"),
+        pytest.param(lambda s, o: s.eq(o), 3, [False, False, True, False, False], id="eq_method_scalar"),
+    ],
+)
+def test_series_comparison_scalar(session, op, other, expected_data):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3, 4, 5]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series_a = df["a"]
+
+    result_series = op(series_a, other)
+
+    expected_series = pd.Series(
+        expected_data,
+        dtype=pd.ArrowDtype(pa.bool_()),
+    )
+    pd.testing.assert_series_equal(
+        result_series.to_pandas(),
+        expected_series,
+        check_names=False,
+    )
+
+
+@pytest.mark.parametrize(
+    ("op", "expected_data"),
+    [
+        pytest.param(lambda s1, s2: s1 < s2, [False, False, False, True, True], id="lt_series"),
+        pytest.param(lambda s1, s2: s1.lt(s2), [False, False, False, True, True], id="lt_method_series"),
+        pytest.param(lambda s1, s2: s1 > s2, [True, True, False, False, False], id="gt_series"),
+        pytest.param(lambda s1, s2: s1.gt(s2), [True, True, False, False, False], id="gt_method_series"),
+        pytest.param(lambda s1, s2: s1 <= s2, [False, False, True, True, True], id="le_series"),
+        pytest.param(lambda s1, s2: s1.le(s2), [False, False, True, True, True], id="le_method_series"),
+        pytest.param(lambda s1, s2: s1 >= s2, [True, True, True, False, False], id="ge_series"),
+        pytest.param(lambda s1, s2: s1.ge(s2), [True, True, True, False, False], id="ge_method_series"),
+        pytest.param(lambda s1, s2: s1 != s2, [True, True, False, True, True], id="ne_series"),
+        pytest.param(lambda s1, s2: s1.ne(s2), [True, True, False, True, True], id="ne_method_series"),
+        pytest.param(lambda s1, s2: s1 == s2, [False, False, True, False, False], id="eq_series"),
+        pytest.param(lambda s1, s2: s1.eq(s2), [False, False, True, False, False], id="eq_method_series"),
+    ],
+)
+def test_series_comparison_series(session, op, expected_data):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3, 4, 5], "b": [0, 1, 3, 5, 6]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series_a = df["a"]
+    series_b = df["b"]
+
+    result_series = op(series_a, series_b)
+
+    expected_series = pd.Series(
+        expected_data,
+        dtype=pd.ArrowDtype(pa.bool_()),
+    )
+    pd.testing.assert_series_equal(
+        result_series.to_pandas(),
+        expected_series,
+        check_names=False,
+    )
+
+
 def test_series_abs(session):
     pandas_df = pd.DataFrame(
         {"a": [-1, 2, -3]},
