@@ -3,7 +3,7 @@ name = "leanframe"
 version = "0.1.0"
 description = "LeanFrame is a pandas-like API built on top of Ibis."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "pandas >=2.2.0",
     "pyarrow >=15.0.2",
@@ -27,3 +27,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["./"]
 include = ["leanframe"]
+
+[tool.ruff]
+exclude = ["scratch", "vault"]
