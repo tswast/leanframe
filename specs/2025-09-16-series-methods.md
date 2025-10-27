@@ -73,12 +73,12 @@ and check off the item with an x.
 - [ ] pandas.Series.combine
 - [ ] pandas.Series.combine_first
 - [x] pandas.Series.round
-- [ ] pandas.Series.lt
-- [ ] pandas.Series.gt
-- [ ] pandas.Series.le
-- [ ] pandas.Series.ge
-- [ ] pandas.Series.ne
-- [ ] pandas.Series.eq
+- [x] pandas.Series.lt
+- [x] pandas.Series.gt
+- [x] pandas.Series.le
+- [x] pandas.Series.ge
+- [x] pandas.Series.ne
+- [x] pandas.Series.eq
 - [ ] pandas.Series.product
 - [ ] pandas.Series.dot
 - [ ] pandas.Series.apply
