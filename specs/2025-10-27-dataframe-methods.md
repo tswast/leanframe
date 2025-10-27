@@ -18,8 +18,8 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 - [x] at -- not feasible, requires index
 - [ ] attrs
 - [x] axes -- not feasible, requires index
-- [ ] columns
-- [ ] dtypes
+- [x] columns
+- [x] dtypes
 - [ ] empty
 - [ ] flags
 - [x] iat -- not feasible, requires index
@@ -47,7 +47,7 @@ Implement each pandas DataFrame method that doesn't require an index or ordering
 - [ ] applymap(func[, na_action])
 - [ ] asfreq(freq[, method, how, normalize, ...])
 - [ ] asof(where[, subset])
-- [ ] assign(**kwargs)
+- [x] assign(**kwargs)
 - [ ] astype(dtype[, copy, errors])
 - [x] at_time(time[, asof, axis]) -- not feasible, requires index
 - [ ] backfill(*[, axis, inplace, limit, downcast])
