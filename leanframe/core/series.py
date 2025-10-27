@@ -106,10 +106,10 @@ class Series:
     def __ge__(self, other) -> Series:
         return Series(self._data >= getattr(other, "_data", other))
 
-    def __ne__(self, other) -> Series:
+    def __ne__(self, other) -> Series:  # type: ignore[override]
         return Series(self._data != getattr(other, "_data", other))
 
-    def __eq__(self, other) -> Series:
+    def __eq__(self, other) -> Series:  # type: ignore[override]
         return Series(self._data == getattr(other, "_data", other))
 
     def lt(self, other) -> "Series":
