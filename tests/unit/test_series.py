@@ -49,6 +49,19 @@ def numeric_series(session):
     return session.DataFrame(df_pd)
 
 
+@pytest.fixture
+def bool_series(session):
+    df_pd = pd.DataFrame(
+        {
+            "all_true": [True, True, True],
+            "some_true": [True, False, True],
+            "all_false": [False, False, False],
+        },
+        dtype=pd.ArrowDtype(pa.bool_()),
+    )
+    return session.DataFrame(df_pd)
+
+
 def test_series_ndim(series_for_properties):
     series_int, series_float = series_for_properties
     assert series_int.ndim == 1
@@ -200,6 +213,135 @@ def test_series_arithmetic_scalar(session, op, other, expected_data):
     )
 
 
+@pytest.mark.parametrize(
+    ("op", "other", "expected_data"),
+    [
+        pytest.param(lambda s, o: s < o, 3, [True, True, False, False, False], id="lt_scalar"),
+        pytest.param(lambda s, o: s.lt(o), 3, [True, True, False, False, False], id="lt_method_scalar"),
+        pytest.param(lambda s, o: s > o, 3, [False, False, False, True, True], id="gt_scalar"),
+        pytest.param(lambda s, o: s.gt(o), 3, [False, False, False, True, True], id="gt_method_scalar"),
+        pytest.param(lambda s, o: s <= o, 3, [True, True, True, False, False], id="le_scalar"),
+        pytest.param(lambda s, o: s.le(o), 3, [True, True, True, False, False], id="le_method_scalar"),
+        pytest.param(lambda s, o: s >= o, 3, [False, False, True, True, True], id="ge_scalar"),
+        pytest.param(lambda s, o: s.ge(o), 3, [False, False, True, True, True], id="ge_method_scalar"),
+        pytest.param(lambda s, o: s != o, 3, [True, True, False, True, True], id="ne_scalar"),
+        pytest.param(lambda s, o: s.ne(o), 3, [True, True, False, True, True], id="ne_method_scalar"),
+        pytest.param(lambda s, o: s == o, 3, [False, False, True, False, False], id="eq_scalar"),
+        pytest.param(lambda s, o: s.eq(o), 3, [False, False, True, False, False], id="eq_method_scalar"),
+    ],
+)
+def test_series_comparison_scalar(session, op, other, expected_data):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3, 4, 5]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series_a = df["a"]
+
+    result_series = op(series_a, other)
+
+    expected_series = pd.Series(
+        expected_data,
+        dtype=pd.ArrowDtype(pa.bool_()),
+    )
+    pd.testing.assert_series_equal(
+        result_series.to_pandas(),
+        expected_series,
+        check_names=False,
+    )
+
+
+@pytest.mark.parametrize(
+    ("op", "expected_data"),
+    [
+        pytest.param(lambda s1, s2: s1 < s2, [False, False, False, True, True], id="lt_series"),
+        pytest.param(lambda s1, s2: s1.lt(s2), [False, False, False, True, True], id="lt_method_series"),
+        pytest.param(lambda s1, s2: s1 > s2, [True, True, False, False, False], id="gt_series"),
+        pytest.param(lambda s1, s2: s1.gt(s2), [True, True, False, False, False], id="gt_method_series"),
+        pytest.param(lambda s1, s2: s1 <= s2, [False, False, True, True, True], id="le_series"),
+        pytest.param(lambda s1, s2: s1.le(s2), [False, False, True, True, True], id="le_method_series"),
+        pytest.param(lambda s1, s2: s1 >= s2, [True, True, True, False, False], id="ge_series"),
+        pytest.param(lambda s1, s2: s1.ge(s2), [True, True, True, False, False], id="ge_method_series"),
+        pytest.param(lambda s1, s2: s1 != s2, [True, True, False, True, True], id="ne_series"),
+        pytest.param(lambda s1, s2: s1.ne(s2), [True, True, False, True, True], id="ne_method_series"),
+        pytest.param(lambda s1, s2: s1 == s2, [False, False, True, False, False], id="eq_series"),
+        pytest.param(lambda s1, s2: s1.eq(s2), [False, False, True, False, False], id="eq_method_series"),
+    ],
+)
+def test_series_comparison_series(session, op, expected_data):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3, 4, 5], "b": [0, 1, 3, 5, 6]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series_a = df["a"]
+    series_b = df["b"]
+
+    result_series = op(series_a, series_b)
+
+    expected_series = pd.Series(
+        expected_data,
+        dtype=pd.ArrowDtype(pa.bool_()),
+    )
+    pd.testing.assert_series_equal(
+        result_series.to_pandas(),
+        expected_series,
+        check_names=False,
+    )
+
+
+def test_series_abs(session):
+    pandas_df = pd.DataFrame(
+        {"a": [-1, 2, -3]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.abs()
+    expected = pd.Series(
+        [1, 2, 3],
+        name="a",
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
+
+
+def test_series_astype(session):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.astype(pd.ArrowDtype(pa.float64()))
+    expected = pd.Series(
+        [1.0, 2.0, 3.0],
+        name="a",
+        dtype=pd.ArrowDtype(pa.float64()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
+
+
+def test_series_all(bool_series):
+    assert bool_series["all_true"].all()
+    assert not bool_series["some_true"].all()
+    assert not bool_series["all_false"].all()
+
+
+def test_series_any(bool_series):
+    assert bool_series["all_true"].any()
+    assert bool_series["some_true"].any()
+    assert not bool_series["all_false"].any()
+
+
 def test_series_round(numeric_series):
     series = numeric_series["b"]
     result = round(series, 0)
@@ -244,6 +386,32 @@ def test_series_std(numeric_series):
 def test_series_var(numeric_series):
     series = numeric_series["b"]
     assert round(series.var(), 2) == 3.03
+
+
+def test_series_count(series_for_properties):
+    series_int, series_float = series_for_properties
+    assert series_int.count() == 3
+    assert series_float.count() == 2
+
+
+def test_series_isin(session):
+    pandas_df = pd.DataFrame(
+        {"a": ["a", "b", "c"]},
+        dtype=pd.ArrowDtype(pa.string()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.isin(["a", "c"])
+    expected = pd.Series(
+        [True, False, True],
+        name="a",
+        dtype=pd.ArrowDtype(pa.bool_()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
 
 
 def test_series_copy(session):

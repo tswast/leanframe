@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import ibis
 import ibis.expr.datatypes as ibis_dtypes
 import pandas as pd
 
@@ -34,3 +35,19 @@ def convert_ibis_to_pandas(
     """
     arrow_type = ibis_type.to_pyarrow()
     return pd.ArrowDtype(arrow_type)
+
+
+def convert_pandas_to_ibis(
+    pandas_type: pd.ArrowDtype,
+) -> ibis_dtypes.DataType:
+    """
+    Convert a pandas ArrowDtype to an ibis type.
+
+    Args:
+        pandas_type: The pandas type to convert.
+
+    Returns:
+        The corresponding ibis type.
+    """
+    arrow_type = pandas_type.pyarrow_dtype
+    return ibis.dtype(arrow_type)

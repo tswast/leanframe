@@ -19,7 +19,7 @@ from __future__ import annotations
 import ibis.expr.types as ibis_types
 import numpy as np
 import pandas as pd
-from leanframe.core.dtypes import convert_ibis_to_pandas
+from leanframe.core.dtypes import convert_ibis_to_pandas, convert_pandas_to_ibis
 
 
 class Series:
@@ -94,8 +94,62 @@ class Series:
     def __rmul__(self, other) -> Series:
         return Series(getattr(other, "_data", other) * self._data)
 
+    def __lt__(self, other) -> Series:
+        return Series(self._data < getattr(other, "_data", other))
+
+    def __gt__(self, other) -> Series:
+        return Series(self._data > getattr(other, "_data", other))
+
+    def __le__(self, other) -> Series:
+        return Series(self._data <= getattr(other, "_data", other))
+
+    def __ge__(self, other) -> Series:
+        return Series(self._data >= getattr(other, "_data", other))
+
+    def __ne__(self, other) -> Series:  # type: ignore[override]
+        return Series(self._data != getattr(other, "_data", other))
+
+    def __eq__(self, other) -> Series:  # type: ignore[override]
+        return Series(self._data == getattr(other, "_data", other))
+
+    def lt(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is less than the other."""
+        return self < other
+
+    def gt(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is greater than the other."""
+        return self > other
+
+    def le(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is less than or equal to the other."""
+        return self <= other
+
+    def ge(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is greater than or equal to the other."""
+        return self >= other
+
+    def ne(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is not equal to the other."""
+        return self != other
+
+    def eq(self, other) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is equal to the other."""
+        return self == other
+
     def __round__(self, n) -> Series:
         return Series(self._data.round(n))
+
+    def abs(self) -> "Series":
+        """Return a Series with the absolute value of each element."""
+        return Series(self._data.abs())
+
+    def all(self) -> bool:
+        """Return whether all elements are True."""
+        return self._data.all().to_pyarrow().as_py()
+
+    def any(self) -> bool:
+        """Return whether any element is True."""
+        return self._data.any().to_pyarrow().as_py()
 
     def sum(self):
         """Return the sum of the Series."""
@@ -121,9 +175,22 @@ class Series:
         """Return the var of the Series."""
         return self._data.var().to_pyarrow().as_py()
 
+    def count(self) -> int:
+        """Return the number of non-null observations in the Series."""
+        return self._data.count().to_pyarrow().as_py()
+
     def copy(self) -> Series:
         """Return a copy of the Series."""
         return Series(self._data)
+
+    def isin(self, values) -> "Series":
+        """Return a boolean Series showing whether each element in the Series is exactly contained in the passed sequence of values."""
+        return Series(self._data.isin(values))
+
+    def astype(self, dtype: pd.ArrowDtype) -> "Series":
+        """Cast a Series to a specified dtype."""
+        ibis_type = convert_pandas_to_ibis(dtype)
+        return Series(self._data.cast(ibis_type))
 
     def to_pandas(self) -> pd.Series:
         """Convert to a pandas Series."""
