@@ -43,18 +43,18 @@ class Session:
         """Create a DataFrame pointing to the table called ``table_name``."""
         import leanframe.core.frame
 
-        return leanframe.core.frame.DataFrame(self._backend.table(table_name))
+        return leanframe.core.frame.DataFrame(self, self._backend.table(table_name))
 
     def DataFrame(self, data: ibis_types.Table | pandas.DataFrame):
         """Construct a DataFrame."""
         import leanframe.core.frame
 
         if isinstance(data, ibis_types.Table):
-            return leanframe.core.frame.DataFrame(data)
+            return leanframe.core.frame.DataFrame(self, data)
         elif isinstance(data, pandas.DataFrame):
             table_name = f"lf_{''.join(random.choices(_ALPHABET, k=10))}"
             table = self._backend.create_table(table_name, data, temp=True)
-            return leanframe.core.frame.DataFrame(table)
+            return leanframe.core.frame.DataFrame(self, table)
         else:
             raise NotImplementedError(
                 f"DataFrame constructor doesn't support {type(data)} data yet."

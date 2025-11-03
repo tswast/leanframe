@@ -30,7 +30,8 @@ class DataFrame:
     Session, instead.
     """
 
-    def __init__(self, data: ibis_types.Table):
+    def __init__(self, session, data: ibis_types.Table):
+        self._session = session
         self._data = data
 
     @property
@@ -57,7 +58,7 @@ class DataFrame:
         # TODO(tswast): Support filtering by a boolean Series if we get a Series
         # instead of a key? If so, the Series would have to be a column of the
         # current DataFrame, only. No joins by index key are available.
-        return leanframe.core.series.Series(self._data[key])
+        return leanframe.core.series.Series(self._session, self._data[key])
 
     def assign(self, **kwargs):
         """Assign new columns to a DataFrame.
@@ -81,7 +82,7 @@ class DataFrame:
             new_exprs[name] = expr
             
         named_exprs.update(new_exprs)
-        return DataFrame(self._data.select(**named_exprs))
+        return DataFrame(self._session, self._data.select(**named_exprs))
 
     def to_pandas(self) -> pd.DataFrame:
         """Convert the DataFrame to a pandas.DataFrame.
