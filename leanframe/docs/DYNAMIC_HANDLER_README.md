@@ -38,7 +38,7 @@ from leanframe import DynamicNestedHandler
 from leanframe.core.nested_handler import DynamicNestedHandler
 
 # For testing, use absolute imports
-from tests.unit.nested_data.create_nested_data import create_simple_nested_dataframe
+from demos.utils.create_nested_data import create_simple_nested_dataframe
 
 # Create any nested DataFrame
 df = create_simple_nested_dataframe()

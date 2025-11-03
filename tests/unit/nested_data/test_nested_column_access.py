@@ -8,7 +8,7 @@ in leanframe DataFrames created from PyArrow nested data.
 
 import pandas as pd
 from leanframe.core.frame import DataFrame
-from tests.unit.nested_data.create_nested_data import create_simple_nested_dataframe
+from demos.utils.create_nested_data import create_simple_nested_dataframe
 
 
 def test_nested_column_access():

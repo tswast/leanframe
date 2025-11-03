@@ -8,7 +8,7 @@ ibis/leanframe ecosystem, avoiding pandas conversion until the very end (if need
 
 import ibis
 from leanframe.core.frame import DataFrame
-from tests.unit.nested_data.create_nested_data import create_extended_nested_dataframe
+from demos.utils.create_nested_data import create_extended_nested_dataframe
 
 
 def test_pure_leanframe_nested_operations():

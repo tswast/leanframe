@@ -11,12 +11,12 @@ Key features:
 - Works with arbitrary nesting levels
 """
 
-from tests.unit.nested_data.create_nested_data import (
+from demos.utils.create_nested_data import (
     create_simple_nested_dataframe,
     create_extended_nested_dataframe,
     create_deeply_nested_dataframe,
 )
-from leanframe.core.nested_handler import DynamicNestedHandler
+from leanframe.core.frame import DynamicNestedHandler
 
 
 def demo_basic_usage():

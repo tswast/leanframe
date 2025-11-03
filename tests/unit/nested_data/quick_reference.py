@@ -7,7 +7,7 @@ Essential code pattern for converting PyArrow nested tables to leanframe DataFra
 
 import pyarrow as pa
 import pandas as pd
-from tests.unit.nested_data.create_nested_data import pyarrow_to_leanframe
+from demos.utils.create_nested_data import pyarrow_to_leanframe
 
 
 def convert_pyarrow_to_leanframe(pa_table):
@@ -39,7 +39,7 @@ def safe_to_pandas(lf_df):
 
 # Example usage:
 if __name__ == "__main__":
-    from tests.unit.nested_data.create_nested_data import (
+    from demos.utils.create_nested_data import (
         get_person_schema,
         create_basic_person_contact_data,
     )

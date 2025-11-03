@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Test the DynamicNestedHandler from its proper location in leanframe.core"""
 
-from leanframe.core.nested_handler import DynamicNestedHandler
-from tests.unit.nested_data.create_nested_data import (
+from leanframe.core.frame import DynamicNestedHandler
+from demos.utils.create_nested_data import (
     create_simple_nested_dataframe,
     create_extended_nested_dataframe,
     create_deeply_nested_dataframe,
