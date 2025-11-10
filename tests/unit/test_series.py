@@ -310,6 +310,86 @@ def test_series_abs(session):
     )
 
 
+def test_series_cummax(session):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3, 2, 1]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.cummax()
+    expected = pd.Series(
+        [1, 2, 3, 3, 3],
+        name="a",
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
+
+
+def test_series_cummin(session):
+    pandas_df = pd.DataFrame(
+        {"a": [3, 2, 1, 2, 3]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.cummin()
+    expected = pd.Series(
+        [3, 2, 1, 1, 1],
+        name="a",
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
+
+
+def test_series_cumprod(session):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3, 4, 5]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.cumprod()
+    expected = pd.Series(
+        [1, 2, 6, 24, 120],
+        name="a",
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
+
+
+def test_series_cumsum(session):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3, 4, 5]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.cumsum()
+    expected = pd.Series(
+        [1, 3, 6, 10, 15],
+        name="a",
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
+
+
 def test_series_astype(session):
     pandas_df = pd.DataFrame(
         {"a": [1, 2, 3]},
@@ -322,6 +402,49 @@ def test_series_astype(session):
         [1.0, 2.0, 3.0],
         name="a",
         dtype=pd.ArrowDtype(pa.float64()),
+    )
+    pd.testing.assert_series_equal(
+        result.to_pandas(),
+        expected,
+        check_names=False,
+    )
+
+
+def test_series_describe(session):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3, 4, 5]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.describe()
+    # Note: leanframe does not support indexes, so we don't check the index.
+    # The order of the values is guaranteed by the implementation of `describe`.
+    expected = pd.Series(
+        [5.0, 3.0, 1.5811388300841898, 1.0, 2.0, 3.0, 4.0, 5.0],
+        name="a",
+            dtype="float64",
+    )
+    pd.testing.assert_series_equal(
+        result,
+        expected,
+        check_names=False,
+        check_index=False,
+    )
+
+
+def test_series_diff(session):
+    pandas_df = pd.DataFrame(
+        {"a": [1, 2, 3, 4, 5]},
+        dtype=pd.ArrowDtype(pa.int64()),
+    )
+    df = session.DataFrame(pandas_df)
+    series = df["a"]
+    result = series.diff()
+    expected = pd.Series(
+        [None, 1, 1, 1, 1],
+        name="a",
+        dtype=pd.ArrowDtype(pa.int64()),
     )
     pd.testing.assert_series_equal(
         result.to_pandas(),

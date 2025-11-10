@@ -179,6 +179,42 @@ class Series:
         """Return the number of non-null observations in the Series."""
         return self._data.count().to_pyarrow().as_py()
 
+    def cummax(self) -> "Series":
+        """Return a Series with the cumulative maximum of each element."""
+        return Series(self._data.cummax())
+
+    def cummin(self) -> "Series":
+        """Return a Series with the cumulative minimum of each element."""
+        return Series(self._data.cummin())
+
+    def cumprod(self) -> "Series":
+        """Return a Series with the cumulative product of each element."""
+        return Series(self._data.log().cumsum().exp().cast(self._data.type()))
+
+    def cumsum(self) -> "Series":
+        """Return a Series with the cumulative sum of each element."""
+        return Series(self._data.cumsum())
+
+    def describe(self) -> pd.Series:
+        """Return a Series with descriptive statistics."""
+        stats = {
+            "count": self.count(),
+            "mean": self.mean(),
+            "std": self.std(),
+            "min": self.min(),
+            "25%": self._data.quantile(0.25).to_pyarrow().as_py(),
+            "50%": self._data.quantile(0.50).to_pyarrow().as_py(),
+            "75%": self._data.quantile(0.75).to_pyarrow().as_py(),
+            "max": self.max(),
+        }
+
+        index = ["count", "mean", "std", "min", "25%", "50%", "75%", "max"]
+        return pd.Series(stats, name=self.name, index=index)
+
+    def diff(self) -> "Series":
+        """Return a Series with the difference between each element and the previous element."""
+        return Series(self._data - self._data.lag())
+
     def copy(self) -> Series:
         """Return a copy of the Series."""
         return Series(self._data)
