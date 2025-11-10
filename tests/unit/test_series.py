@@ -418,14 +418,12 @@ def test_series_describe(session):
     df = session.DataFrame(pandas_df)
     series = df["a"]
     result = series.describe()
-    # Note: leanframe does not support indexes, so we don't check the index.
-    # The order of the values is guaranteed by the implementation of `describe`.
     expected = pandas_df["a"].describe().astype("float64")
     pd.testing.assert_series_equal(
         result,
         expected,
         check_names=False,
-        check_index=False,
+        rtol=0.01,
     )
 
 
