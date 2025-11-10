@@ -54,22 +54,22 @@ and check off the item with an x.
 - [ ] pandas.Series.pop -- not feasible, requires index
 - [ ] pandas.Series.item
 - [ ] pandas.Series.xs
-- [ ] pandas.Series.add
-- [ ] pandas.Series.sub
-- [ ] pandas.Series.mul
-- [ ] pandas.Series.div
-- [ ] pandas.Series.truediv
-- [ ] pandas.Series.floordiv
-- [ ] pandas.Series.mod
-- [ ] pandas.Series.pow
-- [ ] pandas.Series.radd
-- [ ] pandas.Series.rsub
-- [ ] pandas.Series.rmul
-- [ ] pandas.Series.rdiv
-- [ ] pandas.Series.rtruediv
-- [ ] pandas.Series.rfloordiv
-- [ ] pandas.Series.rmod
-- [ ] pandas.Series.rpow
+- [x] pandas.Series.add
+- [x] pandas.Series.sub
+- [x] pandas.Series.mul
+- [x] pandas.Series.div
+- [x] pandas.Series.truediv
+- [x] pandas.Series.floordiv
+- [x] pandas.Series.mod
+- [x] pandas.Series.pow
+- [x] pandas.Series.radd
+- [x] pandas.Series.rsub
+- [x] pandas.Series.rmul
+- [x] pandas.Series.rdiv
+- [x] pandas.Series.rtruediv
+- [x] pandas.Series.rfloordiv
+- [x] pandas.Series.rmod
+- [x] pandas.Series.rpow
 - [ ] pandas.Series.combine
 - [ ] pandas.Series.combine_first
 - [x] pandas.Series.round

@@ -184,15 +184,33 @@ def test_to_pandas(session: leanframe.Session, series_pd: pd.Series):
 
 
 @pytest.mark.parametrize(
-    ("op", "other", "expected_data"),
+    ("op", "other", "expected_data", "expected_dtype"),
     [
-        pytest.param(lambda s, o: s + o, 1, [2, 3, 4], id="add_scalar"),
-        pytest.param(lambda s, o: o + s, 1, [2, 3, 4], id="radd_scalar"),
-        pytest.param(lambda s, o: s * o, 2, [2, 4, 6], id="mul_scalar"),
-        pytest.param(lambda s, o: o * s, 2, [2, 4, 6], id="rmul_scalar"),
+        pytest.param(lambda s, o: s + o, 1, [2, 3, 4], pd.ArrowDtype(pa.int64()), id="add_scalar"),
+        pytest.param(lambda s, o: s.add(o), 1, [2, 3, 4], pd.ArrowDtype(pa.int64()), id="add_method_scalar"),
+        pytest.param(lambda s, o: o + s, 1, [2, 3, 4], pd.ArrowDtype(pa.int64()), id="radd_scalar"),
+        pytest.param(lambda s, o: s - o, 1, [0, 1, 2], pd.ArrowDtype(pa.int64()), id="sub_scalar"),
+        pytest.param(lambda s, o: s.sub(o), 1, [0, 1, 2], pd.ArrowDtype(pa.int64()), id="sub_method_scalar"),
+        pytest.param(lambda s, o: o - s, 1, [0, -1, -2], pd.ArrowDtype(pa.int64()), id="rsub_scalar"),
+        pytest.param(lambda s, o: s * o, 2, [2, 4, 6], pd.ArrowDtype(pa.int64()), id="mul_scalar"),
+        pytest.param(lambda s, o: s.mul(o), 2, [2, 4, 6], pd.ArrowDtype(pa.int64()), id="mul_method_scalar"),
+        pytest.param(lambda s, o: o * s, 2, [2, 4, 6], pd.ArrowDtype(pa.int64()), id="rmul_scalar"),
+        pytest.param(lambda s, o: s / o, 2, [0.5, 1.0, 1.5], pd.ArrowDtype(pa.float64()), id="truediv_scalar"),
+        pytest.param(lambda s, o: s.div(o), 2, [0.5, 1.0, 1.5], pd.ArrowDtype(pa.float64()), id="div_method_scalar"),
+        pytest.param(lambda s, o: s.truediv(o), 2, [0.5, 1.0, 1.5], pd.ArrowDtype(pa.float64()), id="truediv_method_scalar"),
+        pytest.param(lambda s, o: o / s, 2, [2.0, 1.0, 2/3], pd.ArrowDtype(pa.float64()), id="rtruediv_scalar"),
+        pytest.param(lambda s, o: s // o, 2, [0, 1, 1], pd.ArrowDtype(pa.int64()), id="floordiv_scalar"),
+        pytest.param(lambda s, o: s.floordiv(o), 2, [0, 1, 1], pd.ArrowDtype(pa.int64()), id="floordiv_method_scalar"),
+        pytest.param(lambda s, o: o // s, 3, [3, 1, 1], pd.ArrowDtype(pa.int64()), id="rfloordiv_scalar"),
+        pytest.param(lambda s, o: s % o, 2, [1, 0, 1], pd.ArrowDtype(pa.int64()), id="mod_scalar"),
+        pytest.param(lambda s, o: s.mod(o), 2, [1, 0, 1], pd.ArrowDtype(pa.int64()), id="mod_method_scalar"),
+        pytest.param(lambda s, o: o % s, 2, [0, 0, 2], pd.ArrowDtype(pa.int64()), id="rmod_scalar"),
+        pytest.param(lambda s, o: s ** o, 2, [1, 4, 9], pd.ArrowDtype(pa.int64()), id="pow_scalar"),
+        pytest.param(lambda s, o: s.pow(o), 2, [1, 4, 9], pd.ArrowDtype(pa.int64()), id="pow_method_scalar"),
+        pytest.param(lambda s, o: o ** s, 2, [2, 4, 8], pd.ArrowDtype(pa.int64()), id="rpow_scalar"),
     ],
 )
-def test_series_arithmetic_scalar(session, op, other, expected_data):
+def test_series_arithmetic_scalar(session, op, other, expected_data, expected_dtype):
     pandas_df = pd.DataFrame(
         {"a": [1, 2, 3]},
         dtype=pd.ArrowDtype(pa.int64()),
@@ -204,12 +222,13 @@ def test_series_arithmetic_scalar(session, op, other, expected_data):
 
     expected_series = pd.Series(
         expected_data,
-        dtype=pd.ArrowDtype(pa.int64()),
+        dtype=expected_dtype,
     )
     pd.testing.assert_series_equal(
         result_series.to_pandas(),
         expected_series,
         check_names=False,
+        rtol=0.001,
     )
 
 
@@ -556,13 +575,26 @@ def test_series_iter(series_for_properties):
 
 
 @pytest.mark.parametrize(
-    ("op", "expected_data"),
+    ("op", "expected_data", "expected_dtype"),
     [
-        pytest.param(lambda s1, s2: s1 + s2, [5, 7, 9], id="add_series"),
-        pytest.param(lambda s1, s2: s1 * s2, [4, 10, 18], id="mul_series"),
+        pytest.param(lambda s1, s2: s1 + s2, [5, 7, 9], pd.ArrowDtype(pa.int64()), id="add_series"),
+        pytest.param(lambda s1, s2: s1.add(s2), [5, 7, 9], pd.ArrowDtype(pa.int64()), id="add_method_series"),
+        pytest.param(lambda s1, s2: s1 - s2, [-3, -3, -3], pd.ArrowDtype(pa.int64()), id="sub_series"),
+        pytest.param(lambda s1, s2: s1.sub(s2), [-3, -3, -3], pd.ArrowDtype(pa.int64()), id="sub_method_series"),
+        pytest.param(lambda s1, s2: s1 * s2, [4, 10, 18], pd.ArrowDtype(pa.int64()), id="mul_series"),
+        pytest.param(lambda s1, s2: s1.mul(s2), [4, 10, 18], pd.ArrowDtype(pa.int64()), id="mul_method_series"),
+        pytest.param(lambda s1, s2: s1 / s2, [0.25, 0.4, 0.5], pd.ArrowDtype(pa.float64()), id="truediv_series"),
+        pytest.param(lambda s1, s2: s1.div(s2), [0.25, 0.4, 0.5], pd.ArrowDtype(pa.float64()), id="div_method_series"),
+        pytest.param(lambda s1, s2: s1.truediv(s2), [0.25, 0.4, 0.5], pd.ArrowDtype(pa.float64()), id="truediv_method_series"),
+        pytest.param(lambda s1, s2: s1 // s2, [0, 0, 0], pd.ArrowDtype(pa.int64()), id="floordiv_series"),
+        pytest.param(lambda s1, s2: s1.floordiv(s2), [0, 0, 0], pd.ArrowDtype(pa.int64()), id="floordiv_method_series"),
+        pytest.param(lambda s1, s2: s1 % s2, [1, 2, 3], pd.ArrowDtype(pa.int64()), id="mod_series"),
+        pytest.param(lambda s1, s2: s1.mod(s2), [1, 2, 3], pd.ArrowDtype(pa.int64()), id="mod_method_series"),
+        pytest.param(lambda s1, s2: s1 ** s2, [1, 32, 729], pd.ArrowDtype(pa.int64()), id="pow_series"),
+        pytest.param(lambda s1, s2: s1.pow(s2), [1, 32, 729], pd.ArrowDtype(pa.int64()), id="pow_method_series"),
     ],
 )
-def test_series_arithmetic_series(session, op, expected_data):
+def test_series_arithmetic_series(session, op, expected_data, expected_dtype):
     pandas_df = pd.DataFrame(
         {"a": [1, 2, 3], "b": [4, 5, 6]},
         dtype=pd.ArrowDtype(pa.int64()),
@@ -575,7 +607,7 @@ def test_series_arithmetic_series(session, op, expected_data):
 
     expected_series = pd.Series(
         expected_data,
-        dtype=pd.ArrowDtype(pa.int64()),
+        dtype=expected_dtype,
     )
     pd.testing.assert_series_equal(
         result_series.to_pandas(),

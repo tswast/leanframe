@@ -87,12 +87,112 @@ class Series:
     
     def __radd__(self, other) -> Series:
         return Series(getattr(other, "_data", other) + self._data)
+
+    def __sub__(self, other) -> Series:
+        return Series(self._data - getattr(other, "_data", other))
+
+    def __rsub__(self, other) -> Series:
+        return Series(getattr(other, "_data", other) - self._data)
     
     def __mul__(self, other) -> Series:
         return Series(self._data * getattr(other, "_data", other))
     
     def __rmul__(self, other) -> Series:
         return Series(getattr(other, "_data", other) * self._data)
+
+    def __truediv__(self, other) -> Series:
+        return Series(self._data / getattr(other, "_data", other))
+
+    def __rtruediv__(self, other) -> Series:
+        return Series(getattr(other, "_data", other) / self._data)
+
+    def __floordiv__(self, other) -> Series:
+        return Series(self._data // getattr(other, "_data", other))
+
+    def __rfloordiv__(self, other) -> Series:
+        return Series(getattr(other, "_data", other) // self._data)
+
+    def __mod__(self, other) -> Series:
+        return Series(self._data % getattr(other, "_data", other))
+
+    def __rmod__(self, other) -> Series:
+        return Series(getattr(other, "_data", other) % self._data)
+
+        other_data = getattr(other, "_data", other)
+        result = self._data**other_data
+
+        is_self_int = self._data.type().is_integer()
+        is_other_int = False
+        if isinstance(other_data, ibis_types.Column):
+            is_other_int = other_data.type().is_integer()
+        elif isinstance(other_data, int):
+            is_other_int = True
+
+        if is_self_int and is_other_int:
+            return Series(result.cast("int64"))
+        return Series(result)
+
+    def __pow__(self, other):
+        other_data = getattr(other, "_data", other)
+        result = self._data**other_data
+
+        is_self_int = self._data.type().is_integer()
+        is_other_int = False
+        if isinstance(other_data, ibis_types.Column):
+            is_other_int = other_data.type().is_integer()
+        elif isinstance(other_data, int):
+            is_other_int = True
+
+        if is_self_int and is_other_int:
+            return Series(result.cast("int64"))
+        return Series(result)
+
+    def __rpow__(self, other):
+        other_data = getattr(other, "_data", other)
+        result = other_data**self._data
+
+        is_self_int = self._data.type().is_integer()
+        is_other_int = False
+        if isinstance(other_data, ibis_types.Column):
+            is_other_int = other_data.type().is_integer()
+        elif isinstance(other_data, int):
+            is_other_int = True
+
+        if is_self_int and is_other_int:
+            return Series(result.cast("int64"))
+        return Series(result)
+
+    def add(self, other) -> "Series":
+        """Return the addition of the Series and the other."""
+        return self + other
+
+    def sub(self, other) -> "Series":
+        """Return the subtraction of the Series and the other."""
+        return self - other
+
+    def mul(self, other) -> "Series":
+        """Return the multiplication of the Series and the other."""
+        return self * other
+
+    def div(self, other) -> "Series":
+        """Return the true division of the Series and the other."""
+        return self / other
+
+    def truediv(self, other) -> "Series":
+        """Return the true division of the Series and the other."""
+        return self / other
+
+    def floordiv(self, other) -> "Series":
+        """Return the floor division of the Series and the other."""
+        return self // other
+
+    def mod(self, other) -> "Series":
+        """Return the modulo of the Series and the other."""
+        return self % other
+
+    def pow(self, other) -> "Series":
+        """Return the power of the Series and the other."""
+        return self**other
 
     def __lt__(self, other) -> Series:
         return Series(self._data < getattr(other, "_data", other))
