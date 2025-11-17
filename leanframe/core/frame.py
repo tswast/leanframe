@@ -100,31 +100,79 @@ and automatically handle nested columns of any depth and structure.
 """
 
 # TODO: replace prints by logging, ask TIM about logger usage
-class DynamicNestedHandler:
+class DataFrameHandler:
     """
-    Completely dynamic nested data handler that can introspect any DataFrame
-    and automatically extract nested fields of arbitrary depth.
-
+    Wrapper for a single leanframe DataFrame that handles nested column introspection.
+    
+    This class wraps ONE DataFrame and provides metadata about its nested structure
+    along with functional operations for extracting nested fields.
+    
+    Design Philosophy - Stateless Data, Cached Metadata:
+    - Wraps a SINGLE leanframe DataFrame (not multiple DataFrames)
+    - Caches IMMUTABLE schema metadata (nested field mappings, column types)
+    - Does NOT cache data or extraction results
+    - All data operations return NEW DataFrame objects (functional style)
+    - Thread-safe for concurrent operations
+    
     Features:
-    - Automatic nested structure detection
-    - Multi-level nesting support
-    - Dynamic field extraction
+    - Automatic nested structure detection via schema introspection
+    - Multi-level nesting support (configurable depth)
+    - Dynamic field extraction (computed on-demand)
     - Preserves non-nested columns
-    - Dictionary-like record access
     - Efficient columnar operations
+    
+    Usage Pattern:
+        # Create handler for a single DataFrame (introspects schema once)
+        handler = DataFrameHandler(customers_df)
+        
+        # Access cached schema metadata (fast, immutable)
+        print(handler.extracted_fields)  # {'person.name': 'person_name', ...}
+        handler.show_structure()
+        
+        # Compute data operations (functional, returns new objects)
+        extracted_df = handler.extract_nested_fields()  # No caching!
+        another_df = handler.extract_nested_fields()    # Computes again
+        
+        # For multi-DataFrame operations, use NestedHandler orchestrator
+        # (See NestedHandler class for joins and other cross-DataFrame operations)
     """
 
-    def __init__(self, lf_df: DataFrame, max_depth: int = 10):
+    def __init__(
+        self, 
+        lf_df: DataFrame, 
+        max_depth: int = 10,
+        table_qualifier: str | None = None
+    ):
+        """
+        Initialize handler by introspecting DataFrame schema.
+        
+        Args:
+            lf_df: leanframe DataFrame to analyze
+            max_depth: Maximum nesting depth to analyze (prevents infinite recursion)
+            table_qualifier: Optional backend table identifier (e.g., "project.dataset.table")
+                           Can be None for in-memory DataFrames. Can be updated later
+                           via set_table_qualifier() method.
+            
+        Note:
+            Constructor only analyzes SCHEMA (metadata), does not extract data.
+            This makes handler creation fast and allows metadata reuse.
+        """
+        # Store reference to original DataFrame (not a copy!)
         self.original_df = lf_df
+        
+        # Configuration
         self.max_depth = max_depth
-        self.nested_fields: dict[str, dict] = {}  # Maps original_path -> extracted_column_name
-        self.struct_columns: set[str] = set()  # Track which columns are structs
-        self.extracted_df = lf_df  # Initialize with original, will be replaced
-        self._arrow_cache = None
-
-        # Perform dynamic introspection
+        
+        # Backend reference - can be None for in-memory DataFrames
+        # This is mutable and can be updated when DataFrame is saved to backend
+        self._table_qualifier: str | None = table_qualifier
+        
+        # Cached schema metadata (immutable after introspection)
+        self.nested_fields: dict[str, dict] = {}  # Maps path -> field metadata
+        self.struct_columns: set[str] = set()  # Tracks struct columns
+        
+        # Perform schema introspection (builds metadata cache)
         self._introspect_structure()
-        self._extract_all_nested_fields()
 
     def _introspect_structure(self):
         """Dynamically introspect the DataFrame to find all nested structures."""
@@ -204,8 +252,58 @@ class DynamicNestedHandler:
         else:
             print(f"{indent}   ⚠️  Struct type has no accessible fields attribute")
 
-    def _extract_all_nested_fields(self):
-        """Extract all discovered nested fields into a flat DataFrame."""
+    def _extract_nested_fields_silent(self) -> DataFrame:
+        """
+        Internal method: Extract nested fields without printing.
+        Used by backward compatibility methods.
+        """
+        ibis_table = self.original_df._data
+        select_exprs = []
+
+        # Add all non-struct columns first
+        for col_name in ibis_table.columns:
+            if col_name not in self.struct_columns:
+                select_exprs.append(ibis_table[col_name])
+
+        # Add all extracted nested fields
+        for field_path, field_info in self.nested_fields.items():
+            try:
+                field_expr = field_info["expression"]
+                extracted_name = field_info["extracted_name"]
+                extraction_expr = field_expr.name(extracted_name)
+                select_exprs.append(extraction_expr)
+            except Exception:
+                pass  # Skip fields that can't be extracted
+
+        # Create and return the new DataFrame
+        if select_exprs:
+            extracted_table = ibis_table.select(*select_exprs)
+            return DataFrame(extracted_table)
+        else:
+            return self.original_df
+
+    def extract_nested_fields(self, verbose: bool = True) -> DataFrame:
+        """
+        Extract all discovered nested fields into a flat DataFrame.
+        
+        IMPORTANT: This is a FUNCTIONAL operation that returns a NEW DataFrame.
+        Results are NOT cached - each call computes fresh extraction.
+        This ensures thread-safety and prevents stale data issues.
+        
+        Args:
+            verbose: If True, prints extraction progress. Set False for silent operation.
+        
+        Returns:
+            NEW DataFrame with flattened structure (does not modify original)
+            
+        Example:
+            handler = DynamicNestedHandler(nested_df)
+            flat1 = handler.extract_nested_fields()  # Computes extraction
+            flat2 = handler.extract_nested_fields()  # Computes again (no cache!)
+        """
+        if not verbose:
+            return self._extract_nested_fields_silent()
+            
         print("\n🚀 Extracting all nested fields...")
 
         ibis_table = self.original_df._data
@@ -237,92 +335,150 @@ class DynamicNestedHandler:
 
         print(f"\n📊 Summary: {extracted_count} nested fields extracted")
 
-        # Create the new DataFrame
+        # Create and return the new DataFrame (no state storage!)
         if select_exprs:
             extracted_table = ibis_table.select(*select_exprs)
-            self.extracted_df = DataFrame(extracted_table)
+            result = DataFrame(extracted_table)
         else:
-            self.extracted_df = self.original_df
+            result = self.original_df
 
-        print(f"   Final DataFrame columns: {len(self.extracted_df.columns)} total")
+        print(f"   Final DataFrame columns: {len(result.columns)} total")
+        return result
 
-    def _get_arrow_table(self):
-        """Get cached PyArrow table for efficient access."""
-        if self._arrow_cache is None:
-            reader = self.extracted_df._data.to_pyarrow()
-            self._arrow_cache = reader
-        return self._arrow_cache
-
-    # Public API - same as before but now completely dynamic
-
-    def get_column(self, column_name: str) -> list:
-        """Get entire column - works for both original and extracted columns."""
-        table = self._get_arrow_table()
-        if column_name not in table.column_names:
-            available = ", ".join(table.column_names)
-            raise KeyError(f"Column '{column_name}' not found. Available: {available}")
-        return table[column_name].to_pylist()
-
-    @property
-    def columns(self) -> list[str]:
-        """All available column names (original + extracted)."""
-        return self._get_arrow_table().column_names
+    # Public API - Functional design without state
 
     @property
     def original_columns(self) -> list[str]:
-        """Original DataFrame column names."""
+        """
+        Get original DataFrame column names.
+        
+        Returns:
+            List of column names from the original DataFrame
+        """
         return self.original_df.columns.tolist()
 
     @property
     def extracted_fields(self) -> dict[str, str]:
-        """Mapping of original nested paths to extracted column names."""
+        """
+        Get mapping of nested paths to extracted column names.
+        
+        This returns CACHED SCHEMA METADATA, not data.
+        Example: {'person.name': 'person_name', 'person.age': 'person_age'}
+        
+        Returns:
+            Dictionary mapping nested paths to flattened column names
+        """
         return {
             path: info["extracted_name"] for path, info in self.nested_fields.items()
         }
+    
+    def get_extracted_column_name(self, nested_path: str) -> str | None:
+        """
+        Look up the extracted column name for a nested path.
+        
+        Args:
+            nested_path: Nested path like 'person.address.city'
+            
+        Returns:
+            Extracted column name like 'person_address_city', or None if not found
+        """
+        return self.extracted_fields.get(nested_path)
 
-    def get_record(self, index: int) -> dict[str, Any]:
-        """Get single record as dictionary."""
-        table = self._get_arrow_table()
-        if index >= len(table):
-            raise IndexError(f"Index {index} out of range (0-{len(table) - 1})")
-
-        row = table.slice(index, 1)
-        record = {}
-        for i, col_name in enumerate(row.column_names):
-            column = row.column(i)
-            record[col_name] = column[0].as_py() if len(column) > 0 else None
-
-        return record
-
-    def get_all_records(self, limit: int | None = None) -> list[dict[str, Any]]:
-        """Get all records as list of dictionaries."""
-        table = self._get_arrow_table()
-        if limit and limit < len(table):
-            table = table.slice(0, limit)
-        return table.to_pylist()
-
-    def filter_by(self, column_name: str, value: Any) -> "DynamicNestedHandler":
-        """Filter records using pure ibis operations."""
-        if column_name not in self.columns:
-            raise KeyError(f"Column '{column_name}' not found")
-
-        ibis_table = self.extracted_df._data
-        filtered_table = ibis_table.filter(ibis_table[column_name] == value)
-        filtered_df = DataFrame(filtered_table)
-
-        # Create new handler with filtered data - skip introspection since structure is same
-        new_handler = DynamicNestedHandler.__new__(DynamicNestedHandler)
-        new_handler.original_df = filtered_df
-        new_handler.extracted_df = filtered_df
-        new_handler.nested_fields = self.nested_fields
-        new_handler.struct_columns = self.struct_columns
-        new_handler._arrow_cache = None
-        new_handler.max_depth = self.max_depth
-
-        return new_handler
+    # Backward compatibility methods - compute on-demand (NO caching!)
+    @property
+    def columns(self) -> list[str]:
+        """
+        Get column names from extracted DataFrame (computed on-demand).
+        
+        WARNING: This performs extraction on EVERY call - use sparingly.
+        For efficiency, call extract_nested_fields() once and reuse the result.
+        """
+        extracted = self._extract_nested_fields_silent()
+        return extracted.columns.tolist()
+    
+    def get_column(self, column_name: str) -> list:
+        """
+        Get entire column data (computed on-demand, not cached).
+        
+        WARNING: This extracts and materializes data on EVERY call.
+        For efficiency, call extract_nested_fields() once and work with that.
+        """
+        extracted = self._extract_nested_fields_silent()
+        pandas_df = extracted.to_pandas()
+        if column_name not in pandas_df.columns:
+            available = ", ".join(pandas_df.columns)
+            raise KeyError(f"Column '{column_name}' not found. Available: {available}")
+        return pandas_df[column_name].tolist()
+    
+    def get_record(self, index: int) -> dict:
+        """
+        Get single record as dictionary (computed on-demand).
+        
+        WARNING: Performs extraction and materialization on EVERY call.
+        Not efficient for iterating over records - use extract_nested_fields() instead.
+        """
+        extracted = self._extract_nested_fields_silent()
+        pandas_df = extracted.to_pandas()
+        if index >= len(pandas_df):
+            raise IndexError(f"Index {index} out of range (0-{len(pandas_df) - 1})")
+        return pandas_df.iloc[index].to_dict()
+    
+    def __len__(self) -> int:
+        """
+        Get number of records from original DataFrame.
+        
+        Note: Uses original DataFrame to avoid extraction overhead.
+        """
+        # Use original DataFrame to avoid extraction overhead
+        pandas_df = self.original_df.to_pandas()
+        return len(pandas_df)
+    
+    def __getitem__(self, index: int) -> dict:
+        """Get record by index."""
+        return self.get_record(index)
+    
+    def __iter__(self):
+        """Iterate over records."""
+        for i in range(len(self)):
+            yield self.get_record(i)
+    
+    def __contains__(self, key: str) -> bool:
+        """Check if column exists in extracted fields."""
+        return key in self.columns
+    
+    def keys(self):
+        """Get all column names."""
+        return self.columns
+    
+    def items(self):
+        """Iterate over (column_name, column_data) pairs."""
+        for key in self.keys():
+            yield key, self.get_column(key)
+    
+    def values(self):
+        """Iterate over column data."""
+        for key in self.keys():
+            yield self.get_column(key)
+    
+    def get(self, key: str, default=None):
+        """Dictionary-like get with default value."""
+        try:
+            return self.get_column(key)
+        except KeyError:
+            return default
 
     def show_structure(self):
-        """Display the complete DataFrame structure analysis."""
+        """
+        Display the complete DataFrame structure analysis.
+        
+        Shows CACHED SCHEMA METADATA:
+        - Original columns and their types
+        - Discovered nested fields and their paths
+        - Expected flattened column structure
+        - Record count from original DataFrame
+        
+        This is a read-only view of cached metadata, not data extraction.
+        """
         print("\n📋 DYNAMIC STRUCTURE ANALYSIS")
         print("=" * 50)
 
@@ -337,48 +493,134 @@ class DynamicNestedHandler:
         for original_path, extracted_name in self.extracted_fields.items():
             print(f"  🔗 {original_path} → {extracted_name}")
 
-        print(f"\nFinal flattened columns: {len(self.columns)}")
-        for col in self.columns:
+        # Show what the flattened structure would look like
+        expected_columns = [col for col in self.original_columns if col not in self.struct_columns]
+        expected_columns.extend(self.extracted_fields.values())
+        print(f"\nFlattened columns ({len(expected_columns)} total):")
+        for col in expected_columns:
             print(f"  📊 {col}")
 
-        table = self._get_arrow_table()
-        print(f"\nRecords: {len(table)}")
+        # Show record count from original
+        pandas_preview = self.original_df.to_pandas()
+        print(f"\nRecords: {len(pandas_preview)}")
 
-    def __len__(self) -> int:
-        return len(self._get_arrow_table())
-
-    def __getitem__(self, index: int) -> dict[str, Any]:
-        return self.get_record(index)
-
-    def __iter__(self) -> Iterator[dict[str, Any]]:
-        for i in range(len(self)):
-            yield self.get_record(i)
+    # Backend reference management
+    
+    @property
+    def table_qualifier(self) -> str | None:
+        """
+        Get the backend table qualifier for this DataFrame.
+        
+        Returns:
+            Backend table identifier (e.g., "project.dataset.table") or None
+            if this is an in-memory DataFrame not yet persisted to backend.
+        
+        Example:
+            handler = DataFrameHandler(df)
+            print(handler.table_qualifier)  # None (in-memory)
+            
+            # After saving to backend
+            handler.set_table_qualifier("mydb.sales.customers")
+            print(handler.table_qualifier)  # "mydb.sales.customers"
+        """
+        return self._table_qualifier
+    
+    def set_table_qualifier(self, qualifier: str | None):
+        """
+        Update the backend table qualifier for this DataFrame.
+        
+        This should be called when:
+        - DataFrame is saved to a backend table
+        - DataFrame is loaded from a backend table
+        - Backend table is dropped (set to None)
+        - DataFrame is renamed in the backend
+        
+        Args:
+            qualifier: New backend table identifier or None to clear
+        
+        Example:
+            handler = DataFrameHandler(in_memory_df)
+            
+            # Save to backend
+            backend.create_table("customers", df.to_pandas())
+            handler.set_table_qualifier("mydb.main.customers")
+            
+            # Later, if table is dropped
+            backend.drop_table("customers")
+            handler.set_table_qualifier(None)  # DataFrame still in memory
+        """
+        old_qualifier = self._table_qualifier
+        self._table_qualifier = qualifier
+        
+        if old_qualifier != qualifier:
+            if qualifier is None:
+                print(f"🔗 Cleared backend reference (was: {old_qualifier})")
+            elif old_qualifier is None:
+                print(f"🔗 Set backend reference: {qualifier}")
+            else:
+                print(f"🔗 Updated backend reference: {old_qualifier} → {qualifier}")
+    
+    def has_backend_table(self) -> bool:
+        """
+        Check if this DataFrame has a backend table reference.
+        
+        Returns:
+            True if DataFrame has a backend table, False if in-memory only
+        """
+        return self._table_qualifier is not None
+    
+    def get_backend_info(self) -> dict[str, str | None]:
+        """
+        Get information about the backend storage.
+        
+        Returns:
+            Dictionary with backend information:
+            - 'qualifier': Full table qualifier or None
+            - 'project': Project name (if qualifier follows project.dataset.table pattern)
+            - 'dataset': Dataset name (if applicable)
+            - 'table': Table name (if applicable)
+            - 'type': 'backend' or 'memory'
+        
+        Example:
+            info = handler.get_backend_info()
+            # {'qualifier': 'myproject.sales.customers',
+            #  'project': 'myproject',
+            #  'dataset': 'sales',
+            #  'table': 'customers',
+            #  'type': 'backend'}
+        """
+        if self._table_qualifier is None:
+            return {
+                'qualifier': None,
+                'project': None,
+                'dataset': None,
+                'table': None,
+                'type': 'memory'
+            }
+        
+        # Try to parse standard format: project.dataset.table
+        parts = self._table_qualifier.split('.')
+        info: dict[str, str | None] = {
+            'qualifier': self._table_qualifier,
+            'project': None,
+            'dataset': None,
+            'table': None,
+            'type': 'backend'
+        }
+        
+        if len(parts) == 3:
+            info['project'] = parts[0]
+            info['dataset'] = parts[1]
+            info['table'] = parts[2]
+        elif len(parts) == 2:
+            info['dataset'] = parts[0]
+            info['table'] = parts[1]
+        elif len(parts) == 1:
+            info['table'] = parts[0]
+        
+        return info
 
     def __repr__(self) -> str:
-        return f"DynamicNestedHandler({len(self)} records, {len(self.original_columns)} → {len(self.columns)} columns)"
-
-    # Dictionary-like interface for column access
-    def get(self, key: str, default=None):
-        """Dictionary-like get with default value"""
-        try:
-            return self.get_column(key)
-        except KeyError:
-            return default
-
-    def keys(self):
-        """Get all column names"""
-        return self.columns
-
-    def items(self):
-        """Iterate over column names and their data"""
-        for key in self.keys():
-            yield key, self.get_column(key)
-
-    def values(self):
-        """Get all column data"""
-        for key in self.keys():
-            yield self.get_column(key)
-
-    def __contains__(self, key: str) -> bool:
-        """Check if column exists"""
-        return key in self.columns
+        num_extracted = len(self.nested_fields)
+        backend_info = " [in-memory]" if not self.has_backend_table() else f" [{self._table_qualifier}]"
+        return f"DataFrameHandler({len(self.original_columns)} cols → {num_extracted} nested fields{backend_info})"
