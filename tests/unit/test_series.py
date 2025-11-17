@@ -109,7 +109,7 @@ def test_series_array(series_for_properties):
 
 def test_series_nbytes(series_for_properties):
     series_int, series_float = series_for_properties
-    
+
     with pytest.raises(NotImplementedError, match="nbytes"):
         assert series_int.nbytes
 

@@ -81,16 +81,16 @@ class Series:
     def empty(self) -> bool:
         """Return True if the Series is empty, False otherwise."""
         return self.size == 0
-    
+
     def __add__(self, other) -> Series:
         return Series(self._data + getattr(other, "_data", other))
-    
+
     def __radd__(self, other) -> Series:
         return Series(getattr(other, "_data", other) + self._data)
-    
+
     def __mul__(self, other) -> Series:
         return Series(self._data * getattr(other, "_data", other))
-    
+
     def __rmul__(self, other) -> Series:
         return Series(getattr(other, "_data", other) * self._data)
 
