@@ -516,27 +516,7 @@ class NestedHandler:
     
     # Legacy join methods - DEPRECATED
     # Use prepare() + direct Ibis operations instead for full SQL flexibility
-    
-    def join_on_nested(self, *args, **kwargs):
-        """DEPRECATED: Use prepare() + Ibis operations instead."""
-        raise DeprecationWarning(
-            "join_on_nested() is deprecated.\n\n"
-            "New approach for full SQL flexibility:\n"
-            "1. Prepare DataFrames: customers_flat = handler.prepare('customers')\n"
-            "2. Use Ibis directly: result = customers_flat._data.join(...)\n"
-            "3. This supports WHERE, HAVING, window functions, complex joins, etc.\n\n"
-            "See documentation for examples."
-        )
-    
-    def join_on_both_nested(self, *args, **kwargs):
-        """DEPRECATED: Use prepare() + Ibis operations instead."""
-        raise DeprecationWarning(
-            "join_on_both_nested() is deprecated.\n\n"
-            "New approach for full SQL flexibility:\n"
-            "1. Prepare DataFrames: handler.prepare('customers'), handler.prepare('orders')\n"
-            "2. Use Ibis directly for joins with full SQL power\n\n"
-            "See documentation for examples."
-        )
+
     
     def __repr__(self) -> str:
         count = len(self._handlers)
