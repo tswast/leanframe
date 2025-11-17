@@ -15,6 +15,11 @@ This file is kept for reference showing additional advanced examples:
 
 For the main demo, see: demos/demo_nested_handler_backend.py
 
+IMPORTANT: Column naming convention
+- User-facing: Use dot notation for nested paths (e.g., "profile.contact.email")
+- Internal: After prepare(), columns use underscores (e.g., "profile_contact_email")
+- In this demo: We show the AFTER prepare() state, so you see underscore names
+
 ---
 
 Original Description:
@@ -115,6 +120,9 @@ def main():
     
     # Step 2: Join using Ibis
     print("\n2️⃣ Join using Ibis (full SQL flexibility):")
+    # Note: After prepare(), nested fields are flattened with underscores
+    # e.g., "profile.contact.email" → "profile_contact_email" (column name)
+    # For simple joins, you could use: nested.join(..., on=[("c", "profile.contact.email", ...)])
     joined = customers_flat._data.join(
         orders_flat._data,
         predicates=[
@@ -125,13 +133,13 @@ def main():
     )
     
     result = DataFrame(joined)
-    print(f"   ✅ Joined: {len(result.columns)} columns, {len(result)} rows")
+    print(f"   ✅ Joined: {len(result.columns)} columns, {joined.count().execute()} rows")
     
     # Step 3: Add WHERE clause
     print("\n3️⃣ Add WHERE clause (filter results):")
-    filtered = joined.filter(joined.amount > 100)
+    filtered = joined.filter(joined.amount > 100)  # type: ignore
     result_filtered = DataFrame(filtered)
-    print(f"   ✅ Filtered (amount > 100): {len(result_filtered)} rows")
+    print(f"   ✅ Filtered (amount > 100): {filtered.count().execute()} rows")
     
     # ===================================================================
     # STEP 3: Three-Table Join
@@ -168,7 +176,7 @@ def main():
     
     three_table_result = DataFrame(step2)
     print(f"   ✅ Three-table join: {len(three_table_result.columns)} columns")
-    print(f"   ✅ Result: {len(three_table_result)} rows")
+    print(f"   ✅ Result: {step2.count().execute()} rows")
     
     # ===================================================================
     # STEP 4: Complex Query with GROUP BY
@@ -181,13 +189,13 @@ def main():
     
     # Group and aggregate
     grouped = step2.group_by("customer_id").aggregate(
-        total_amount=step2.amount.sum(),
-        order_count=step2.order_id.count(),
-        avg_price=step2.price.mean()
+        total_amount=step2.amount.sum(),  # type: ignore
+        order_count=step2.order_id.count(),  # type: ignore
+        avg_price=step2.price.mean()  # type: ignore
     )
     
     grouped_result = DataFrame(grouped)
-    print(f"   ✅ Grouped by customer: {len(grouped_result)} customers")
+    print(f"   ✅ Grouped by customer: {grouped.count().execute()} customers")
     print("\n   Sample results:")
     sample = grouped_result.to_pandas().head(3)
     for _, row in sample.iterrows():
