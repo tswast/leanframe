@@ -137,20 +137,20 @@ def test_columnar_data_access():
         sample_table = extracted_df._data.limit(3)
         pyarrow_result = sample_table.to_pyarrow()
 
-        if hasattr(pyarrow_result, "read_all"):
-            table = pyarrow_result.read_all()
-            if table.num_rows > 0:
-                names = table.column("person_name").to_pylist()
-                ages = table.column("person_age").to_pylist()
-                emails = table.column("email").to_pylist()
+        #if hasattr(pyarrow_result, "read_all"):
+        table = pyarrow_result #.read_all()
+        if table.num_rows > 0:
+            names = table.column("person_name").to_pylist()
+            ages = table.column("person_age").to_pylist()
+            emails = table.column("email").to_pylist()
 
-                # Verify we get data
-                assert len(names) > 0
-                assert len(ages) > 0
-                assert len(emails) > 0
-                assert all(isinstance(name, str) for name in names)
-                assert all(isinstance(age, int) for age in ages)
-                assert all(isinstance(email, str) for email in emails)
+            # Verify we get data
+            assert len(names) > 0
+            assert len(ages) > 0
+            assert len(emails) > 0
+            assert all(isinstance(name, str) for name in names)
+            assert all(isinstance(age, int) for age in ages)
+            assert all(isinstance(email, str) for email in emails)
 
     except Exception:
         # If PyArrow conversion fails, just verify the structure exists
