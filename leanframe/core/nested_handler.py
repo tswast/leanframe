@@ -368,12 +368,13 @@ class NestedHandler:
             )
             
             # Join with selective nested field extraction
+            # Note: Use dot notation naturally - gets converted to underscores internally
             result = handler.join(
                 tables={
                     "c": ["profile.contact.email", "profile.name"],  # Only these fields
                     "o": "orders"  # All fields
                 },
-                on=[("c", "profile_contact_email", "o", "customer_email")],
+                on=[("c", "profile.contact.email", "o", "customer.email")],  # Dot notation OK!
                 how="left"
             )
             
@@ -480,11 +481,16 @@ class NestedHandler:
                     
                     # Check if this condition involves the current right table
                     if right_alias_cond == right_alias:
+                        # Convert dot notation to underscore (user convenience)
+                        # User can write "profile.contact.email" and we convert to "profile_contact_email"
+                        left_col_normalized = left_col.replace(".", "_")
+                        right_col_normalized = right_col.replace(".", "_")
+                        
                         # Build Ibis predicate
                         # Need to access the correct table - tricky with chained joins
                         # For now, use column name directly
                         join_predicates.append(
-                            (result_table[left_col], right_table[right_col])
+                            (result_table[left_col_normalized], right_table[right_col_normalized])
                         )
             else:
                 join_predicates = []

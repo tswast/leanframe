@@ -68,9 +68,10 @@ handler.add("customers", customers_df)
 handler.add("orders", orders_df)
 
 # Simple join - handles nested fields automatically
+# Use natural dot notation for nested paths (converted internally to underscores)
 result = handler.join(
     tables={"c": "customers", "o": "orders"},
-    on=[("c", "email", "o", "customer_email")],
+    on=[("c", "profile.contact.email", "o", "shipping.recipient.email")],
     how="inner"
 )
 ```

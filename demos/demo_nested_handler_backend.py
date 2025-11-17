@@ -137,9 +137,10 @@ def main():
     print("   - Orders: shipping.recipient.email (nested)")
     
     # Use convenience join() method - handles nested extraction automatically!
+    # Note: You can use dot notation naturally - it gets converted to underscores internally
     joined_df = nested.join(
         tables={"c": "customers", "o": "orders"},
-        on=[("c", "profile_contact_email", "o", "shipping_recipient_email")],
+        on=[("c", "profile.contact.email", "o", "shipping.recipient.email")],
         how="inner"
     )
     
