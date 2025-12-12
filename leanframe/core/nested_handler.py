@@ -20,7 +20,6 @@ and coordinates operations between them, particularly joins on nested columns.
 """
 
 from __future__ import annotations
-from typing import Literal
 
 from leanframe.core.frame import DataFrame, DataFrameHandler
 

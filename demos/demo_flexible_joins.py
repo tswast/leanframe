@@ -138,7 +138,7 @@ def main():
     # Step 3: Add WHERE clause
     print("\n3️⃣ Add WHERE clause (filter results):")
     filtered = joined.filter(joined.amount > 100)  # type: ignore
-    result_filtered = DataFrame(filtered)
+    result_filtered = DataFrame(filtered)  # noqa
     print(f"   ✅ Filtered (amount > 100): {filtered.count().execute()} rows")
     
     # ===================================================================

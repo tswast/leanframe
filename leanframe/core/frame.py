@@ -19,7 +19,6 @@ from __future__ import annotations
 import ibis
 import ibis.expr.types as ibis_types
 import pandas as pd
-from typing import Any, Iterator
 
 from leanframe.core.dtypes import convert_ibis_to_pandas
 

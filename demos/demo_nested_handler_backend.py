@@ -56,8 +56,8 @@ def main():
     orders_df = create_orders_for_join()
     
     print("✅ Created two DataFrames:")
-    print(f"   - Customers: email at profile.contact.email (nested 2 levels)")
-    print(f"   - Orders: email at shipping.recipient.email (nested 2 levels, different path!)")
+    print("   - Customers: email at profile.contact.email (nested 2 levels)")
+    print("   - Orders: email at shipping.recipient.email (nested 2 levels, different path!)")
     
     # Connect to local DuckDB
     print("\n🔌 Connecting to local DuckDB...")
@@ -144,13 +144,13 @@ def main():
         how="inner"
     )
     
-    print(f"\n✅ Join complete!")
+    print("\n✅ Join complete!")
     print(f"   Result DataFrame has {len(joined_df.columns)} columns")
     
     # Add result to handler for tracking
     nested.add("customer_orders_simple", joined_df, 
                table_qualifier="joined(local_duckdb.main.customers⋈local_duckdb.main.orders)")
-    print(f"   Added to handler: 'customer_orders_simple'")
+    print("   Added to handler: 'customer_orders_simple'")
     print(f"   NestedHandler now has: {len(nested)} DataFrames")
     
     # ===================================================================
@@ -198,14 +198,14 @@ def main():
     from leanframe.core.frame import DataFrame as LeanDF
     power_user_result = LeanDF(grouped_ibis)
     
-    print(f"\n✅ Power user query complete!")
+    print("\n✅ Power user query complete!")
     print(f"   Result has {len(power_user_result.columns)} columns")
-    print(f"   With WHERE, GROUP BY, and aggregations")
+    print("   With WHERE, GROUP BY, and aggregations")
     
     # Add to handler
     nested.add("customer_summary", power_user_result,
                table_qualifier="aggregated(customer_orders)")
-    print(f"   Added to handler: 'customer_summary'")
+    print("   Added to handler: 'customer_summary'")
     print(f"   NestedHandler now has: {len(nested)} DataFrames")
     
     # ===================================================================
@@ -339,13 +339,13 @@ def main():
     print("=" * 70)
     
     print("\n📊 Summary:")
-    print(f"   - Created 2 nested DataFrames with email in different nested paths")
-    print(f"   - Pushed to local DuckDB: customers, orders")
-    print(f"   - Loaded from DB into NestedHandler (with table qualifiers)")
-    print(f"   - Joined on nested email: profile.contact.email ⋈ shipping.recipient.email")
-    print(f"   - Result auto-added to handler: 'customer_orders'")
-    print(f"   - Saved joined result back to database")
-    print(f"   - Demonstrated backend reference updates (save/drop lifecycle)")
+    print("   - Created 2 nested DataFrames with email in different nested paths")
+    print("   - Pushed to local DuckDB: customers, orders")
+    print("   - Loaded from DB into NestedHandler (with table qualifiers)")
+    print("   - Joined on nested email: profile.contact.email ⋈ shipping.recipient.email")
+    print("   - Result auto-added to handler: 'customer_orders'")
+    print("   - Saved joined result back to database")
+    print("   - Demonstrated backend reference updates (save/drop lifecycle)")
     
     print("\n🎯 Key Architectural Insights:")
     print("   1. DataFrameHandler owns its backend reference (table_qualifier property)")
