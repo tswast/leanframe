@@ -1,7 +1,4 @@
 
-import pytest
-import pandas as pd
-import leanframe as lf
 import ibis
 import ibis.expr.types as ibis_types
 from leanframe.core.frame import DataFrame
