@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Test the DynamicNestedHandler from its proper location in leanframe.core"""
+"""Test the DataFrameHandler from its proper location in leanframe.core"""
 
-from leanframe.core.frame import DynamicNestedHandler
+from leanframe.core.frame import DataFrameHandler
 from demos.utils.create_nested_data import (
     create_simple_nested_dataframe,
     create_extended_nested_dataframe,
@@ -12,7 +12,7 @@ from demos.utils.create_nested_data import (
 def test_simple_nested_structure():
     """Test dynamic handler with simple nested structure (person + contact)."""
     simple_df = create_simple_nested_dataframe(3)
-    handler = DynamicNestedHandler(simple_df)
+    handler = DataFrameHandler(simple_df)
 
     # Test basic properties
     assert len(handler) == 3
@@ -31,7 +31,7 @@ def test_simple_nested_structure():
 def test_extended_nested_structure():
     """Test dynamic handler with extended nested structure (person + contact + address)."""
     extended_df = create_extended_nested_dataframe(3)
-    handler = DynamicNestedHandler(extended_df)
+    handler = DataFrameHandler(extended_df)
 
     # Test extended properties
     assert len(handler) == 3
@@ -52,7 +52,7 @@ def test_extended_nested_structure():
 def test_deeply_nested_structure():
     """Test dynamic handler with deeply nested structure."""
     deep_df = create_deeply_nested_dataframe()
-    handler = DynamicNestedHandler(deep_df)
+    handler = DataFrameHandler(deep_df)
 
     # Test deep nesting handling (create_deeply_nested_dataframe creates 2 records by default)
     assert len(handler) == 2
@@ -90,7 +90,7 @@ def test_handler_adaptability():
     ]
 
     for i, df in enumerate(structures):
-        handler = DynamicNestedHandler(df)
+        handler = DataFrameHandler(df)
 
         # Each should work regardless of structure
         assert len(handler) >= 2

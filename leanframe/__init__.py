@@ -15,11 +15,13 @@
 """LeanFrame provides a DataFrame API for BigQuery."""
 
 from leanframe.core.session import Session
-from leanframe.core.frame import DynamicNestedHandler
+from leanframe.core.frame import DataFrameHandler
+from leanframe.core.nested_handler import NestedHandler
 from leanframe.version import __version__
 
 __all__ = [
     "__version__",
     "Session",
-    "DynamicNestedHandler",
+    "DataFrameHandler",
+    "NestedHandler",
 ]

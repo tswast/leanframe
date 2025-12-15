@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Test the dictionary-like access interface of the DynamicNestedHandler"""
+"""Test the dictionary-like access interface of the DataFrameHandler"""
 
 from demos.utils.create_nested_data import (
     create_simple_nested_dataframe,
     create_extended_nested_dataframe,
 )
-from leanframe.core.frame import DynamicNestedHandler
+from leanframe.core.frame import DataFrameHandler
 
 
 def test_dictionary_access():
-    """Test dictionary-like access interface of DynamicNestedHandler."""
+    """Test dictionary-like access interface of DataFrameHandler."""
     # Create a simple nested DataFrame
     df = create_simple_nested_dataframe()
-    handler = DynamicNestedHandler(df)
+    handler = DataFrameHandler(df)
 
     # Test keys are available
     keys = list(handler.keys())
@@ -52,7 +52,7 @@ def test_dictionary_access():
 def test_extended_structure_access():
     """Test dictionary access with extended nested structure."""
     extended_df = create_extended_nested_dataframe()
-    extended_handler = DynamicNestedHandler(extended_df)
+    extended_handler = DataFrameHandler(extended_df)
 
     # Test extended keys include address fields
     keys = list(extended_handler.keys())

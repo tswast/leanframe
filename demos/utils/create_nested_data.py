@@ -236,6 +236,106 @@ def create_deeply_nested_dataframe() -> DataFrame:
     return pyarrow_to_leanframe(pa_table)
 
 
+def create_customers_for_join() -> DataFrame:
+    """
+    Create customers DataFrame with nested email for join testing.
+    
+    Structure: customer_id, profile.contact.email (nested 2 levels)
+    """
+    data = {
+        "customer_id": [1, 2, 3, 4],
+        "profile": [
+            {
+                "name": "Alice Johnson",
+                "contact": {"email": "alice@example.com", "phone": "555-1001"}
+            },
+            {
+                "name": "Bob Smith", 
+                "contact": {"email": "bob@example.com", "phone": "555-1002"}
+            },
+            {
+                "name": "Charlie Brown",
+                "contact": {"email": "charlie@example.com", "phone": "555-1003"}
+            },
+            {
+                "name": "Diana Prince",
+                "contact": {"email": "diana@example.com", "phone": "555-1004"}
+            }
+        ]
+    }
+    
+    contact_schema = pa.struct([
+        pa.field("email", pa.string()),
+        pa.field("phone", pa.string())
+    ])
+    
+    profile_schema = pa.struct([
+        pa.field("name", pa.string()),
+        pa.field("contact", contact_schema)
+    ])
+    
+    schema = pa.schema([
+        pa.field("customer_id", pa.int64()),
+        pa.field("profile", profile_schema)
+    ])
+    
+    pa_table = pa.Table.from_pydict(data, schema=schema)
+    return pyarrow_to_leanframe(pa_table)
+
+
+def create_orders_for_join() -> DataFrame:
+    """
+    Create orders DataFrame with differently nested email for join testing.
+    
+    Structure: order_id, shipping.recipient.email (nested 2 levels, different path!)
+    """
+    data = {
+        "order_id": [101, 102, 103, 104, 105],
+        "shipping": [
+            {
+                "recipient": {"email": "alice@example.com", "name": "Alice J."},
+                "address": "123 Main St"
+            },
+            {
+                "recipient": {"email": "bob@example.com", "name": "Bob S."},
+                "address": "456 Oak Ave"
+            },
+            {
+                "recipient": {"email": "alice@example.com", "name": "Alice J."},
+                "address": "123 Main St"
+            },
+            {
+                "recipient": {"email": "charlie@example.com", "name": "Charlie B."},
+                "address": "789 Pine Rd"
+            },
+            {
+                "recipient": {"email": "bob@example.com", "name": "Bob S."},
+                "address": "456 Oak Ave"
+            }
+        ],
+        "amount": [299.99, 150.00, 75.50, 420.00, 89.99]
+    }
+    
+    recipient_schema = pa.struct([
+        pa.field("email", pa.string()),
+        pa.field("name", pa.string())
+    ])
+    
+    shipping_schema = pa.struct([
+        pa.field("recipient", recipient_schema),
+        pa.field("address", pa.string())
+    ])
+    
+    schema = pa.schema([
+        pa.field("order_id", pa.int64()),
+        pa.field("shipping", shipping_schema),
+        pa.field("amount", pa.float64())
+    ])
+    
+    pa_table = pa.Table.from_pydict(data, schema=schema)
+    return pyarrow_to_leanframe(pa_table)
+
+
 # Convenience functions for backward compatibility
 if __name__ == "__main__":
     print("=== Centralized Nested Data Creation Demo ===\n")

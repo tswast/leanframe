@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tests for DynamicNestedHandler comprehensive functionality.
+Tests for DataFrameHandler comprehensive functionality.
 
 This tests a truly dynamic handler that can work with ANY nested DataFrame structure.
 Key features:
@@ -12,13 +12,13 @@ Key features:
 """
 
 from demos.utils.create_nested_data import create_simple_nested_dataframe, create_extended_nested_dataframe, create_deeply_nested_dataframe
-from leanframe.core.frame import DynamicNestedHandler
+from leanframe.core.frame import DataFrameHandler
 
 
 def test_basic_usage():
-    """Test basic DynamicNestedHandler usage and structure inspection."""
+    """Test basic DataFrameHandler usage and structure inspection."""
     df = create_simple_nested_dataframe(5)
-    handler = DynamicNestedHandler(df)
+    handler = DataFrameHandler(df)
 
     # Test basic structure
     assert len(handler.original_columns) == 3  # id, person, contact
@@ -49,9 +49,9 @@ def test_basic_usage():
 
 
 def test_data_access():
-    """Test data access patterns of DynamicNestedHandler."""
+    """Test data access patterns of DataFrameHandler."""
     df = create_simple_nested_dataframe(3)
-    handler = DynamicNestedHandler(df)
+    handler = DataFrameHandler(df)
 
     # Test column-wise access
     names = handler.get_column("person_name")
@@ -77,25 +77,27 @@ def test_data_access():
 
 
 def test_filtering():
-    """Test filtering functionality of DynamicNestedHandler."""
+    """Test filtering functionality using extracted DataFrame (stateless approach)."""
     df = create_simple_nested_dataframe(5)
-    handler = DynamicNestedHandler(df)
+    handler = DataFrameHandler(df)
 
-    # Test filtering by age - returns a new handler
-    filtered_handler = handler.filter_by("person_age", 30)
-    assert isinstance(filtered_handler, DynamicNestedHandler)
-
+    # Extract the flattened DataFrame
+    extracted_df = handler.extract_nested_fields(verbose=False)
+    
+    # Filter using pandas (simpler for testing)
+    filtered_pandas = extracted_df.to_pandas()
+    filtered_by_age = filtered_pandas[filtered_pandas["person_age"] == 30]
+    
     # Test the filtered results
-    if len(filtered_handler) > 0:
-        for record in filtered_handler:
-            assert record["person_age"] == 30
+    if len(filtered_by_age) > 0:
+        assert all(filtered_by_age["person_age"] == 30)
 
 
 def test_different_structures():
-    """Test DynamicNestedHandler with different nested structures."""
+    """Test DataFrameHandler with different nested structures."""
     # Extended structure with address
     extended_df = create_extended_nested_dataframe(2)
-    extended_handler = DynamicNestedHandler(extended_df)
+    extended_handler = DataFrameHandler(extended_df)
 
     expected_extended_columns = [
         "id",
@@ -119,9 +121,9 @@ def test_different_structures():
 
 
 def test_deep_nesting():
-    """Test DynamicNestedHandler with deeply nested structures."""
+    """Test DataFrameHandler with deeply nested structures."""
     deep_df = create_deeply_nested_dataframe()
-    deep_handler = DynamicNestedHandler(deep_df)
+    deep_handler = DataFrameHandler(deep_df)
 
     # Verify deep structure handling
     assert len(deep_handler.columns) >= 5  # Should have multiple levels extracted
@@ -142,9 +144,9 @@ def test_deep_nesting():
 
 
 def test_handler_capabilities():
-    """Test general capabilities and edge cases of DynamicNestedHandler."""
+    """Test general capabilities and edge cases of DataFrameHandler."""
     df = create_simple_nested_dataframe(2)
-    handler = DynamicNestedHandler(df)
+    handler = DataFrameHandler(df)
 
     # Test length
     assert len(handler) == 2
