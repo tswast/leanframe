@@ -90,6 +90,10 @@ class DataFrame:
             types_mapper=lambda type_: pd.ArrowDtype(type_)
         )
 
+    def to_ibis(self) -> ibis_types.Table:
+        """Return the underlying Ibis expression."""
+        return self._data
+
 
 """
 Dynamic Nested Data Handler for leanframe

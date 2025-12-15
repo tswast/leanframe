@@ -234,6 +234,10 @@ class Series:
             types_mapper=lambda type_: pd.ArrowDtype(type_)
         )
 
+    def to_ibis(self) -> ibis_types.Column:
+        """Return the underlying Ibis expression."""
+        return self._data
+
     def to_numpy(self) -> np.ndarray:
         """Return a numpy representation of the Series."""
         return self.values
