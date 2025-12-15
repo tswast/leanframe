@@ -45,6 +45,12 @@ class Session:
         #TODO: will crash if self._backend is None. 
         return leanframe.core.frame.DataFrame(self._backend.table(table_name)) # type: ignore
 
+    def read_ibis(self, table_expression: ibis_types.Table):
+        """Create a DataFrame from an Ibis table expression."""
+        import leanframe.core.frame
+
+        return leanframe.core.frame.DataFrame(table_expression)
+
     def DataFrame(self, data: ibis_types.Table | pandas.DataFrame):
         """Construct a DataFrame."""
         import leanframe.core.frame
