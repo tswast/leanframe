@@ -21,9 +21,15 @@ import ibis.expr.types as ibis_types
 import pandas as pd
 
 from leanframe.core.dtypes import convert_ibis_to_pandas
+from leanframe.core.indexing import (
+    Index,
+    ILocIndexer,
+    LocIndexer,
+    HeadTailMixin,
+)
 
 
-class DataFrame:
+class DataFrame(HeadTailMixin):
     """A 2D data structure, representing data and deferred computation.
 
     WARNING: Do not call this constructor directly. Use the factory methods on
@@ -32,11 +38,72 @@ class DataFrame:
 
     def __init__(self, data: ibis_types.Table):
         self._data = data
+        self._index: Index | None = None  # Explicit ordering specification
+        
+        # Create indexers (lazy - only instantiated when accessed)
+        self._iloc: ILocIndexer | None = None
+        self._loc: LocIndexer | None = None
 
     @property
     def columns(self) -> pd.Index:
         """The column labels of the DataFrame."""
         return pd.Index(self._data.columns, dtype="object")
+    
+    @property
+    def index(self) -> Index | None:
+        """
+        The index (ordering specification) for this DataFrame.
+        
+        Returns None if no index is set. Use .set_index() to establish
+        deterministic ordering for position-based operations.
+        
+        Example:
+            df = df.set_index('timestamp', ascending=False)
+            print(df.index)  # Index('timestamp', descending)
+        """
+        return self._index
+    
+    @property
+    def iloc(self) -> ILocIndexer:
+        """
+        Position-based indexing with explicit ordering.
+        
+        Requires an index to be set via .set_index() for deterministic results.
+        
+        Returns:
+            ILocIndexer for position-based access
+            
+        Raises:
+            ValueError: If accessed without setting an index first
+            
+        Example:
+            df = df.set_index('timestamp', ascending=False)
+            newest_10 = df.iloc[0:10]
+        """
+        if self._iloc is None:
+            self._iloc = ILocIndexer(self)
+        return self._iloc
+    
+    @property
+    def loc(self) -> LocIndexer:
+        """
+        Label-based indexing on index column values.
+        
+        Requires an index to be set via .set_index().
+        
+        Returns:
+            LocIndexer for label-based access
+            
+        Raises:
+            ValueError: If accessed without setting an index first
+            
+        Example:
+            df = df.set_index('customer_id')
+            customer = df.loc[12345]
+        """
+        if self._loc is None:
+            self._loc = LocIndexer(self)
+        return self._loc
 
     @property
     def dtypes(self) -> pd.Series:
@@ -93,6 +160,58 @@ class DataFrame:
     def to_ibis(self) -> ibis_types.Table:
         """Return the underlying Ibis expression."""
         return self._data
+    
+    def set_index(
+        self,
+        column: str,
+        ascending: bool = True,
+        name: str | None = None
+    ) -> DataFrame:
+        """
+        Set the index (ordering specification) for this DataFrame.
+        
+        This establishes deterministic row ordering for position-based
+        operations like .iloc, .head(), and .tail().
+        
+        Unlike pandas, this does NOT modify the DataFrame structure or
+        create a new column. It only specifies how rows should be ordered
+        for subsequent operations.
+        
+        Args:
+            column: Column name to order by
+            ascending: Sort direction (True=ascending, False=descending)
+            name: Optional name for the index (defaults to column name)
+            
+        Returns:
+            New DataFrame with index set (original DataFrame unchanged)
+            
+        Raises:
+            KeyError: If column doesn't exist
+            
+        Example:
+            # Order by timestamp (newest first)
+            df = df.set_index('timestamp', ascending=False)
+            newest = df.iloc[0]
+            
+            # Order by customer_id
+            df = df.set_index('customer_id')
+            customer = df.loc[12345]
+            
+            # Chain with other operations
+            top_10 = df.set_index('score', ascending=False).head(10)
+        """
+        # Validate column exists
+        if column not in self._data.columns:
+            available = ", ".join(self._data.columns)
+            raise KeyError(
+                f"Column '{column}' not found. Available columns: {available}"
+            )
+        
+        # Create new DataFrame with index set
+        new_df = DataFrame(self._data)
+        new_df._index = Index(column, ascending=ascending, name=name)
+        
+        return new_df
 
 
 """
