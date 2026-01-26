@@ -26,14 +26,15 @@ class TestIndex:
         """Test creating an Index."""
         idx = Index('customer_id', ascending=True)
         assert idx.column == 'customer_id'
-        assert idx.ascending is True
-        assert idx.name == 'customer_id'
+        assert idx.columns == ['customer_id']
+        assert idx.ascending == [True]
     
     def test_index_with_name(self):
         """Test creating an Index with custom name."""
         idx = Index('timestamp', ascending=False, name='time_idx')
         assert idx.column == 'timestamp'
-        assert idx.ascending is False
+        assert idx.columns == ['timestamp']
+        assert idx.ascending == [False]
         assert idx.name == 'time_idx'
     
     def test_index_repr(self):
@@ -42,6 +43,25 @@ class TestIndex:
         assert 'Index' in repr(idx)
         assert 'id' in repr(idx)
         assert 'ascending' in repr(idx)
+    
+    def test_multi_column_index(self):
+        """Test creating a multi-column Index."""
+        idx = Index(['priority', 'timestamp'], ascending=[False, True])
+        assert idx.columns == ['priority', 'timestamp']
+        assert idx.ascending == [False, True]
+        assert idx.column == 'priority'  # First column
+        assert idx.is_multi_column() is True
+    
+    def test_multi_column_index_single_ascending(self):
+        """Test multi-column index with single ascending value."""
+        idx = Index(['col1', 'col2', 'col3'], ascending=False)
+        assert idx.columns == ['col1', 'col2', 'col3']
+        assert idx.ascending == [False, False, False]  # Applied to all
+    
+    def test_multi_column_index_mismatch_error(self):
+        """Test that mismatched ascending list raises error."""
+        with pytest.raises(ValueError, match="Length of ascending"):
+            Index(['col1', 'col2'], ascending=[True, False, True])
 
 
 class TestSetIndex:
@@ -63,14 +83,16 @@ class TestSetIndex:
         df = simple_df.set_index('id')
         assert df.index is not None
         assert df.index.column == 'id'
-        assert df.index.ascending is True
+        assert df.index.columns == ['id']
+        assert df.index.ascending == [True]
     
     def test_set_index_descending(self, simple_df):
         """Test setting index with descending order."""
         df = simple_df.set_index('value', ascending=False)
         assert df.index is not None
         assert df.index.column == 'value'
-        assert df.index.ascending is False
+        assert df.index.columns == ['value']
+        assert df.index.ascending == [False]
     
     def test_set_index_with_name(self, simple_df):
         """Test setting index with custom name."""
@@ -89,6 +111,14 @@ class TestSetIndex:
         assert simple_df.index is None
         # New one should have index
         assert df_indexed.index is not None
+    
+    def test_set_index_multi_column(self, simple_df):
+        """Test setting index on multiple columns."""
+        df = simple_df.set_index(['id', 'value'], ascending=[True, False])
+        assert df.index is not None
+        assert df.index.columns == ['id', 'value']
+        assert df.index.ascending == [True, False]
+        assert df.index.is_multi_column() is True
 
 
 class TestILocIndexing:
@@ -150,6 +180,27 @@ class TestILocIndexing:
         result = df.iloc[0]
         pandas_result = result.to_pandas()
         assert pandas_result['id'].iloc[0] == 5
+    
+    def test_iloc_multi_column_ordering(self):
+        """Test .iloc with multi-column index."""
+        data = {
+            'priority': [1, 1, 2, 2, 3],
+            'timestamp': [5, 3, 4, 2, 1],
+            'value': [10, 20, 30, 40, 50]
+        }
+        ibis_table = ibis.memtable(data)
+        # Order by priority DESC, then timestamp ASC
+        df = DataFrame(ibis_table).set_index(
+            ['priority', 'timestamp'], 
+            ascending=[False, True]
+        )
+        
+        # First row should be priority=3, timestamp=1
+        result = df.iloc[0]
+        pandas_result = result.to_pandas()
+        assert pandas_result['priority'].iloc[0] == 3
+        assert pandas_result['timestamp'].iloc[0] == 1
+        assert pandas_result['value'].iloc[0] == 50
 
 
 class TestLocIndexing:

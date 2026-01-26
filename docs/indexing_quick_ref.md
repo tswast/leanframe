@@ -18,27 +18,41 @@ df.set_index('timestamp', ascending=False).iloc[0:10]
 
 ### Setting an Index
 
-#### `DataFrame.set_index(column, ascending=True, name=None)`
+#### `DataFrame.set_index(columns, ascending=True, name=None)`
 
 Establishes deterministic row ordering for position-based operations.
 
 **Parameters:**
-- `column` (str): Column name to order by
-- `ascending` (bool): Sort direction (True=ASC, False=DESC)
-- `name` (str, optional): Name for the index (defaults to column name)
+- `columns` (str or list[str]): Column name(s) to order by
+- `ascending` (bool or list[bool]): Sort direction(s) (True=ASC, False=DESC)
+- `name` (str, optional): Name for the index (defaults to first column name)
 
 **Returns:** New DataFrame with index set
 
 **Example:**
 ```python
-# Ascending order
+# Single column - ascending order
 df = df.set_index('customer_id')
 
-# Descending order
+# Single column - descending order
 df = df.set_index('timestamp', ascending=False)
+
+# Multi-column ordering (like SQL ORDER BY col1 DESC, col2 ASC)
+df = df.set_index(['priority', 'timestamp'], ascending=[False, True])
+
+# Multi-column with single ascending for all
+df = df.set_index(['region', 'customer_id'], ascending=True)
 
 # With custom name
 df = df.set_index('score', ascending=False, name='rank')
+```
+
+**Multi-Column Ordering:**
+When multiple columns are specified, they define a composite ordering just like SQL's `ORDER BY col1, col2, col3`. The first column is the primary sort, with subsequent columns breaking ties:
+
+```python
+# SQL equivalent: ORDER BY priority DESC, timestamp ASC, id ASC
+df.set_index(['priority', 'timestamp', 'id'], ascending=[False, True, True])
 ```
 
 ---

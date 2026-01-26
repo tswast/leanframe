@@ -301,6 +301,90 @@ def demo_error_cases():
     print(result.to_pandas())
 
 
+def demo_multi_column_ordering():
+    """Demo 6: Multi-column composite ordering (like SQL ORDER BY col1, col2)."""
+    print("\n" + "="*70)
+    print("DEMO 6: Multi-Column Ordering")
+    print("="*70)
+    
+    # Create sample data with priority and timestamp
+    task_data = {
+        'task_id': [101, 102, 103, 104, 105, 106, 107, 108],
+        'priority': [1, 1, 2, 2, 3, 3, 1, 2],
+        'timestamp': [
+            datetime(2024, 3, 1, 10, 0),
+            datetime(2024, 3, 1, 9, 0),
+            datetime(2024, 3, 1, 11, 0),
+            datetime(2024, 3, 1, 8, 0),
+            datetime(2024, 3, 1, 12, 0),
+            datetime(2024, 3, 1, 7, 0),
+            datetime(2024, 3, 1, 13, 0),
+            datetime(2024, 3, 1, 14, 0),
+        ],
+        'description': ['Task A', 'Task B', 'Task C', 'Task D', 'Task E', 'Task F', 'Task G', 'Task H']
+    }
+    
+    ibis_table = ibis.memtable(task_data)
+    df = DataFrame(ibis_table)
+    
+    print("\nOriginal data (unordered):")
+    print(df.to_pandas()[['task_id', 'priority', 'timestamp', 'description']])
+    
+    # Single-column ordering
+    print("\n📍 Single-column index on 'priority' (ascending):")
+    by_priority = df.set_index('priority')
+    print(by_priority.to_pandas()[['task_id', 'priority', 'timestamp', 'description']])
+    print("Note: Within each priority level, order is not deterministic")
+    
+    # Multi-column ordering - priority ASC, timestamp ASC
+    print("\n📍 Multi-column index: ['priority', 'timestamp'] (both ascending):")
+    by_priority_time = df.set_index(['priority', 'timestamp'], ascending=True)
+    print(by_priority_time.to_pandas()[['task_id', 'priority', 'timestamp', 'description']])
+    print("Result: Ordered by priority, then by earliest timestamp within each priority")
+    
+    # Multi-column with different directions
+    print("\n📍 Multi-column index: ['priority', 'timestamp'] with [DESC, ASC]:")
+    by_priority_desc = df.set_index(['priority', 'timestamp'], ascending=[False, True])
+    print(by_priority_desc.to_pandas()[['task_id', 'priority', 'timestamp', 'description']])
+    print("Result: Highest priority first, then earliest timestamp (priority queue)")
+    
+    # Use with iloc
+    print("\n🎯 Getting top 3 tasks with multi-column ordering:")
+    print("   (Highest priority first, earliest timestamp breaks ties)")
+    top_3 = by_priority_desc.iloc[0:3]
+    print(top_3.to_pandas()[['task_id', 'priority', 'timestamp', 'description']])
+    
+    # Example with nested data
+    print("\n📍 Multi-column ordering with nested fields:")
+    customers_data, _ = create_sample_nested_data()
+    customers_df = DataFrame(ibis.memtable(customers_data))
+    handler = DataFrameHandler(customers_df)
+    flat_df = handler.extract_nested_fields(verbose=False)
+    
+    # Order by age DESC, then registration_date ASC
+    by_age_date = flat_df.set_index(['profile_age', 'registration_date'], ascending=[False, True])
+    print("\n   Ordered by age DESC (nested field), registration_date ASC (regular field):")
+    print(by_age_date.to_pandas()[['customer_id', 'profile_name', 'profile_age', 'registration_date']])
+    print("\n   SQL equivalent: ORDER BY profile_age DESC, registration_date ASC")
+    print("\n   This demonstrates ordering across different nesting levels:")
+    print("   - 'profile_age' comes from nested 'profile' struct")
+    print("   - 'registration_date' is a regular top-level column")
+    
+    # More complex example: order by regular column, then multiple nested fields
+    print("\n📍 Complex multi-level ordering:")
+    print("   Order by registration_date DESC (regular), then profile_age ASC (nested), then profile_name ASC (nested):")
+    complex_order = flat_df.set_index(
+        ['registration_date', 'profile_age', 'profile_name'],
+        ascending=[False, True, True]
+    )
+    result = complex_order.to_pandas()[['customer_id', 'profile_name', 'profile_age', 'registration_date']]
+    print(result)
+    print("\n   This shows:")
+    print("   - Primary sort: newest registrations first (regular column)")
+    print("   - Secondary sort: youngest first within same date (nested field)")
+    print("   - Tertiary sort: alphabetical by name for same age (nested field)")
+
+
 if __name__ == "__main__":
     print("\n" + "🚀 LEANFRAME INDEXING EXAMPLES" + "\n")
     print("This demo shows indexing features with nested data support")
@@ -311,6 +395,7 @@ if __name__ == "__main__":
     demo_joins_with_indexing()
     demo_chaining_operations()
     demo_error_cases()
+    demo_multi_column_ordering()
     
     print("\n" + "="*70)
     print("✅ All demos completed!")
@@ -321,4 +406,5 @@ if __name__ == "__main__":
     print("3. Use .loc for value-based filtering (on index column)")
     print("4. Indexing works seamlessly with nested data extraction")
     print("5. Chain operations: extract -> flatten -> index -> slice")
+    print("6. Multi-column ordering: like SQL ORDER BY col1 DESC, col2 ASC")
     print("\nSee docs/indexing_guide.md for more details!")

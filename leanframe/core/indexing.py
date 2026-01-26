@@ -57,46 +57,103 @@ class Index:
         - Stores column name(s) and sort direction(s)
         - Does NOT materialize data
         - Used by Indexer classes to build ORDER BY clauses
-        - Single column index only (no multi-index)
+        - Supports single or multiple columns (composite ordering)
     
     Attributes:
-        column: Column name to order by
-        ascending: True for ascending, False for descending
+        columns: List of column names to order by (in priority order)
+        ascending: List of sort directions (True=ASC, False=DESC) for each column
         name: Optional name for the index
     
     Example:
-        # Create index on timestamp column (descending)
+        # Single column index
         idx = Index('timestamp', ascending=False)
         
-        # Or with a name
+        # Multi-column index (ORDER BY priority DESC, timestamp DESC)
+        idx = Index(['priority', 'timestamp'], ascending=[False, False])
+        
+        # With custom name
         idx = Index('customer_id', ascending=True, name='customer_idx')
     """
     
     def __init__(
         self,
-        column: str,
-        ascending: bool = True,
+        columns: str | list[str],
+        ascending: bool | list[bool] = True,
         name: str | None = None
     ):
         """
         Initialize an Index specification.
         
         Args:
-            column: Column name to order by
-            ascending: Sort direction (True=ASC, False=DESC)
+            columns: Column name(s) to order by. Can be:
+                    - Single string: 'timestamp'
+                    - List of strings: ['priority', 'timestamp']
+            ascending: Sort direction(s). Can be:
+                      - Single bool: True (applies to all columns)
+                      - List of bools: [False, True] (one per column)
             name: Optional name for the index
+            
+        Raises:
+            ValueError: If ascending list length doesn't match columns list length
         """
-        self.column = column
-        self.ascending = ascending
-        self.name = name or column
+        # Normalize to lists
+        if isinstance(columns, str):
+            self.columns = [columns]
+        else:
+            self.columns = list(columns)
+        
+        # Normalize ascending to list
+        if isinstance(ascending, bool):
+            self.ascending = [ascending] * len(self.columns)
+        else:
+            self.ascending = list(ascending)
+            if len(self.ascending) != len(self.columns):
+                raise ValueError(
+                    f"Length of ascending ({len(self.ascending)}) must match "
+                    f"length of columns ({len(self.columns)})"
+                )
+        
+        # Set name
+        if name is not None:
+            self.name = name
+        elif len(self.columns) == 1:
+            self.name = self.columns[0]
+        else:
+            self.name = f"({', '.join(self.columns)})"
+    
+    @property
+    def column(self) -> str:
+        """
+        Get the primary (first) column name.
+        
+        For backward compatibility with single-column index usage.
+        
+        Returns:
+            First column in the index
+        """
+        return self.columns[0]
+    
+    def is_multi_column(self) -> bool:
+        """Check if this is a multi-column index."""
+        return len(self.columns) > 1
     
     def __repr__(self) -> str:
-        direction = "ascending" if self.ascending else "descending"
-        return f"Index('{self.column}', {direction})"
+        if len(self.columns) == 1:
+            direction = "ascending" if self.ascending[0] else "descending"
+            return f"Index('{self.columns[0]}', {direction})"
+        else:
+            parts = []
+            for col, asc in zip(self.columns, self.ascending):
+                direction = "ASC" if asc else "DESC"
+                parts.append(f"{col} {direction}")
+            return f"Index([{', '.join(parts)}])"
     
     def __str__(self) -> str:
-        direction = "ASC" if self.ascending else "DESC"
-        return f"{self.column} {direction}"
+        parts = []
+        for col, asc in zip(self.columns, self.ascending):
+            direction = "ASC" if asc else "DESC"
+            parts.append(f"{col} {direction}")
+        return ", ".join(parts)
 
 
 class ILocIndexer:
@@ -156,11 +213,14 @@ class ILocIndexer:
         index = self._df._index
         ibis_table = self._df._data
         
-        # Apply ordering based on index
-        if index.ascending:
-            ordered = ibis_table.order_by(ibis_table[index.column])
-        else:
-            ordered = ibis_table.order_by(ibis_table[index.column].desc())
+        # Apply ordering based on index (supports multi-column)
+        order_exprs = []
+        for col, asc in zip(index.columns, index.ascending):
+            if asc:
+                order_exprs.append(ibis_table[col])
+            else:
+                order_exprs.append(ibis_table[col].desc())
+        ordered = ibis_table.order_by(order_exprs)
         
         # Handle different key types
         if isinstance(key, int):
@@ -175,10 +235,14 @@ class ILocIndexer:
                     UserWarning
                 )
                 # Reverse order and take abs(key) - 1 offset
-                reversed_order = ordered.order_by(
-                    ibis_table[index.column].desc() if index.ascending 
-                    else ibis_table[index.column]
-                )
+                # Reverse all ordering directions
+                reverse_exprs = []
+                for col, asc in zip(index.columns, index.ascending):
+                    if asc:
+                        reverse_exprs.append(ibis_table[col].desc())
+                    else:
+                        reverse_exprs.append(ibis_table[col])
+                reversed_order = ibis_table.order_by(reverse_exprs)
                 result = reversed_order.limit(1, offset=abs(key) - 1)
             else:
                 result = ordered.limit(1, offset=key)
@@ -296,7 +360,10 @@ class LocIndexer:
         
         index = self._df._index
         ibis_table = self._df._data
-        index_col = ibis_table[index.column]
+        
+        # For multi-column index, use the primary (first) column for filtering
+        # This is consistent with pandas behavior
+        index_col = ibis_table[index.columns[0]]
         
         # Handle different key types
         if isinstance(key, slice):
@@ -332,11 +399,14 @@ class LocIndexer:
             # Multiple values: df.loc[[val1, val2, val3]]
             result = ibis_table.filter(index_col.isin(key))
             
-            # Apply ordering
-            if index.ascending:
-                result = result.order_by(index_col)
-            else:
-                result = result.order_by(index_col.desc())
+            # Apply ordering (all index columns)
+            order_exprs = []
+            for col, asc in zip(index.columns, index.ascending):
+                if asc:
+                    order_exprs.append(result[col])
+                else:
+                    order_exprs.append(result[col].desc())
+            result = result.order_by(order_exprs)
             
             from leanframe.core.frame import DataFrame
             return DataFrame(result)
@@ -388,12 +458,15 @@ class HeadTailMixin:
         """
         ibis_table = self._data
         
-        # Apply ordering if index is set
+        # Apply ordering if index is set (supports multi-column)
         if hasattr(self, '_index') and self._index is not None:
-            if self._index.ascending:
-                ibis_table = ibis_table.order_by(ibis_table[self._index.column])
-            else:
-                ibis_table = ibis_table.order_by(ibis_table[self._index.column].desc())
+            order_exprs = []
+            for col, asc in zip(self._index.columns, self._index.ascending):
+                if asc:
+                    order_exprs.append(ibis_table[col])
+                else:
+                    order_exprs.append(ibis_table[col].desc())
+            ibis_table = ibis_table.order_by(order_exprs)
         
         result = ibis_table.limit(n)
         from leanframe.core.frame import DataFrame
@@ -426,22 +499,26 @@ class HeadTailMixin:
         
         ibis_table = self._data
         
-        # Reverse the ordering to get last n rows
-        if self._index.ascending:
-            # If ascending, order by desc to get last rows
-            reversed_table = ibis_table.order_by(ibis_table[self._index.column].desc())
-        else:
-            # If descending, order by asc to get last rows
-            reversed_table = ibis_table.order_by(ibis_table[self._index.column])
+        # Reverse the ordering to get last n rows (all columns)
+        reverse_exprs = []
+        for col, asc in zip(self._index.columns, self._index.ascending):
+            if asc:
+                reverse_exprs.append(ibis_table[col].desc())
+            else:
+                reverse_exprs.append(ibis_table[col])
+        reversed_table = ibis_table.order_by(reverse_exprs)
         
         # Take n rows, then reverse back to original order
         result = reversed_table.limit(n)
         
         # Re-apply original ordering
-        if self._index.ascending:
-            result = result.order_by(result[self._index.column])
-        else:
-            result = result.order_by(result[self._index.column].desc())
+        original_exprs = []
+        for col, asc in zip(self._index.columns, self._index.ascending):
+            if asc:
+                original_exprs.append(result[col])
+            else:
+                original_exprs.append(result[col].desc())
+        result = result.order_by(original_exprs)
         
         from leanframe.core.frame import DataFrame
         return DataFrame(result)

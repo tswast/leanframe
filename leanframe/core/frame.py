@@ -163,8 +163,8 @@ class DataFrame(HeadTailMixin):
     
     def set_index(
         self,
-        column: str,
-        ascending: bool = True,
+        columns: str | list[str],
+        ascending: bool | list[bool] = True,
         name: str | None = None
     ) -> DataFrame:
         """
@@ -177,39 +177,60 @@ class DataFrame(HeadTailMixin):
         create a new column. It only specifies how rows should be ordered
         for subsequent operations.
         
+        Supports both single-column and multi-column ordering (like SQL's
+        ORDER BY col1, col2, col3). For multi-column ordering, the order
+        of columns determines their priority.
+        
         Args:
-            column: Column name to order by
-            ascending: Sort direction (True=ascending, False=descending)
+            columns: Column name(s) to order by. Can be:
+                    - Single string: 'timestamp'
+                    - List of strings: ['priority', 'timestamp']
+                    Works with nested columns after extraction:
+                    - ['person_age', 'person_name']
+            ascending: Sort direction(s). Can be:
+                      - Single bool: True (applies to all columns)
+                      - List of bools: [False, True] (one per column)
             name: Optional name for the index (defaults to column name)
             
         Returns:
             New DataFrame with index set (original DataFrame unchanged)
             
         Raises:
-            KeyError: If column doesn't exist
+            KeyError: If any column doesn't exist
+            ValueError: If ascending list length doesn't match columns list length
             
         Example:
-            # Order by timestamp (newest first)
+            # Single column ordering
             df = df.set_index('timestamp', ascending=False)
             newest = df.iloc[0]
             
-            # Order by customer_id
-            df = df.set_index('customer_id')
-            customer = df.loc[12345]
+            # Multi-column ordering (ORDER BY priority DESC, timestamp DESC)
+            df = df.set_index(['priority', 'timestamp'], ascending=[False, False])
+            top_urgent = df.iloc[0:10]
+            
+            # Works with nested columns after extraction
+            handler = DataFrameHandler(nested_df)
+            flat = handler.extract_nested_fields()
+            by_age_name = flat.set_index(['person_age', 'person_name'], 
+                                         ascending=[False, True])
             
             # Chain with other operations
             top_10 = df.set_index('score', ascending=False).head(10)
         """
-        # Validate column exists
-        if column not in self._data.columns:
-            available = ", ".join(self._data.columns)
-            raise KeyError(
-                f"Column '{column}' not found. Available columns: {available}"
-            )
+        # Normalize columns to list
+        col_list = [columns] if isinstance(columns, str) else list(columns)
+        
+        # Validate all columns exist
+        for col in col_list:
+            if col not in self._data.columns:
+                available = ", ".join(self._data.columns)
+                raise KeyError(
+                    f"Column '{col}' not found. Available columns: {available}"
+                )
         
         # Create new DataFrame with index set
         new_df = DataFrame(self._data)
-        new_df._index = Index(column, ascending=ascending, name=name)
+        new_df._index = Index(columns, ascending=ascending, name=name)
         
         return new_df
 

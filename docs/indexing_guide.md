@@ -19,17 +19,60 @@ df.set_index('timestamp', ascending=False).iloc[0:10]  # 10 newest records
 Use `.set_index()` to establish ordering:
 
 ```python
-# Order by timestamp (ascending)
+# Single column - ascending order
 df = df.set_index('timestamp')
 
-# Order by timestamp (descending - newest first)
+# Single column - descending order (newest first)
 df = df.set_index('timestamp', ascending=False)
 
-# Order by customer_id
-df = df.set_index('customer_id')
+# Multi-column ordering (SQL: ORDER BY col1, col2)
+df = df.set_index(['priority', 'timestamp'], ascending=[False, True])
+
+# Multi-column with same direction for all
+df = df.set_index(['region', 'customer_id'], ascending=True)
 ```
 
 **Important:** The index doesn't create a new column or modify data. It's a **specification** for how to order rows in subsequent operations.
+
+### Multi-Column Ordering
+
+When you specify multiple columns, leanframe creates a composite ordering like SQL's `ORDER BY` clause:
+
+```python
+# Order by priority DESC, then timestamp ASC (for ties)
+df = df.set_index(['priority', 'timestamp'], ascending=[False, True])
+
+# Equivalent SQL:
+# ORDER BY priority DESC, timestamp ASC
+```
+
+This is particularly useful for:
+- **Breaking ties**: Primary sort by one column, secondary by another
+- **Hierarchical data**: Sort by category, then subcategory, then item
+- **Time series with groups**: Sort by group DESC, then timestamp ASC
+
+**Examples:**
+
+```python
+# Customer data: group by region, then by signup date
+df.set_index(['region', 'signup_date'], ascending=[True, False])
+
+# Priority queue: highest priority first, earliest timestamp breaks ties
+df.set_index(['priority', 'timestamp'], ascending=[False, True])
+
+# Sales data: year DESC, quarter DESC, region ASC
+df.set_index(['year', 'quarter', 'region'], ascending=[False, False, True])
+```
+
+You can specify a single `ascending` value to apply to all columns:
+
+```python
+# All ascending
+df.set_index(['col1', 'col2', 'col3'], ascending=True)
+
+# All descending
+df.set_index(['col1', 'col2', 'col3'], ascending=False)
+```
 
 ## Position-Based Indexing (.iloc)
 
