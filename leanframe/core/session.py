@@ -69,6 +69,6 @@ class Session:
 
     def col(self, name: str):
         """Return a new expression object which is a deferred series."""
-        import leanframe.core.series
+        import leanframe.core.expression
 
-        return leanframe.core.series.Series(ibis.deferred[name])
+        return leanframe.core.expression.Expression(ibis.deferred[name])

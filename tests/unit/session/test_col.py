@@ -17,7 +17,7 @@
 import ibis
 import pandas as pd
 
-import leanframe.core.series
+import leanframe.core.expression
 from leanframe.core.session import Session
 
 
@@ -35,12 +35,12 @@ def test_col_assign_with_memtable():
     # Use col to create a new column based on existing one
     deferred_col = session.col('a')
 
-    # Verify it returns a Series
-    assert isinstance(deferred_col, leanframe.core.series.Series)
+    # Verify it returns an Expression
+    assert isinstance(deferred_col, leanframe.core.expression.Expression)
 
-    # Perform arithmetic (should return another deferred Series)
+    # Perform arithmetic (should return another deferred Expression)
     expr = deferred_col + 1
-    assert isinstance(expr, leanframe.core.series.Series)
+    assert isinstance(expr, leanframe.core.expression.Expression)
 
     # Use in assign
     df_new = df.assign(b=expr)
