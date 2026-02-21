@@ -66,3 +66,9 @@ class Session:
             raise NotImplementedError(
                 f"DataFrame constructor doesn't support {type(data)} data yet."
             )
+
+    def col(self, name: str):
+        """Return a new expression object which is a deferred series."""
+        import leanframe.core.expression
+
+        return leanframe.core.expression.Expression(ibis.deferred[name])
