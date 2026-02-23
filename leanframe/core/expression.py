@@ -16,7 +16,13 @@
 
 from __future__ import annotations
 
+import ibis
 import ibis.expr.types as ibis_types
+
+
+def col(name: str) -> Expression:
+    """Return a new expression object which is a deferred series."""
+    return Expression(ibis.deferred[name])
 
 
 class Expression:
