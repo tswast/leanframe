@@ -22,6 +22,7 @@ import ibis
 import ibis.expr.types as ibis_types
 import pandas
 
+from leanframe.core.expression import col
 
 _ALPHABET = "abcdefghijklmnopqrstufwxyz"
 
@@ -67,8 +68,4 @@ class Session:
                 f"DataFrame constructor doesn't support {type(data)} data yet."
             )
 
-    def col(self, name: str):
-        """Return a new expression object which is a deferred series."""
-        import leanframe.core.expression
-
-        return leanframe.core.expression.Expression(ibis.deferred[name])
+    col = staticmethod(col)
