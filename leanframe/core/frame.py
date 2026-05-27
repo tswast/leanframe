@@ -19,6 +19,8 @@ from __future__ import annotations
 import ibis
 import ibis.expr.types as ibis_types
 import pandas as pd
+from functools import reduce
+import operator
 
 from leanframe.core.dtypes import convert_ibis_to_pandas
 from leanframe.core.indexing import (
@@ -534,11 +536,8 @@ class DataFrameHandler:
             conditions.append(ibis_table[column] == value)
         if not conditions:
             raise ValueError("At least one column=value filter must be provided.")
-        from functools import reduce
-        import operator
         combined = reduce(operator.and_, conditions)
         filtered_table = ibis_table.filter(combined)
-        from leanframe.core.frame import DataFrame
         filtered_lf_df = DataFrame(filtered_table)
         return DataFrameHandler(filtered_lf_df)
 
