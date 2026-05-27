@@ -96,7 +96,7 @@ def demo_filtering():
     print(f"Original handler has {len(handler)} records")
 
     # Filter by age - returns a new handler
-    filtered_handler = handler.filter_by("person_age", 30)
+    filtered_handler = handler.filter_by(person_age=30)
     print(f"Filtered handler (age=30) has {len(filtered_handler)} records")
 
     # Show the filtered results

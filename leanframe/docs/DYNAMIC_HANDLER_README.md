@@ -19,7 +19,7 @@ This implementation provides a **truly dynamic** nested DataFrame handler that c
 - **Dictionary-like Access**: `handler.get_column('nested_field')`, `'field' in handler`, `handler.keys()`
 - **Record Access**: `handler[0]` returns complete record as dictionary
 - **Column Operations**: Get entire columns as lists for analysis
-- **Filtering**: `handler.filter_by('field', value)` with ibis expressions
+- **Filtering**: `handler.filter_by(field=value)` with ibis expressions
 
 ### ✅ Performance & Memory Efficient
 - **Lazy Evaluation**: Only extracts data when accessed
@@ -76,7 +76,7 @@ for field_name, field_data in handler.items():
 ### Filtering
 ```python
 # Filter records
-adults = handler.filter_by('person_age', 30)
+adults = handler.filter_by(person_age=30)
 print(f"Found {len(adults)} records")
 ```
 

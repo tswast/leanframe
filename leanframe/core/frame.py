@@ -515,21 +515,30 @@ class DataFrameHandler:
             path: info["extracted_name"] for path, info in self.nested_fields.items()
         }
     
-    def filter_by(self, column: str, value) -> "DataFrameHandler":
+    def filter_by(self, **kwargs) -> "DataFrameHandler":
         """
-        Return a new DataFrameHandler filtered by column == value.
+        Return a new DataFrameHandler filtered by one or more column==value pairs.
         Args:
-            column: The column name to filter on (must be a flattened/extracted column).
-            value: The value to match.
+            kwargs: column=value pairs to filter on (must be flattened/extracted columns).
         Returns:
             New DataFrameHandler with filtered records.
+        Example:
+            handler.filter_by(person_age=30, person_city="Berlin")
         """
-        # Extract the flat DataFrame with all columns
         flat_df = self.extract_nested_fields(verbose=False)
         ibis_table = flat_df._data
-        if column not in ibis_table.columns:
-            raise KeyError(f"Column '{column}' not found in DataFrame.")
-        filtered_table = ibis_table.filter(ibis_table[column] == value)
+        conditions = []
+        for column, value in kwargs.items():
+            if column not in ibis_table.columns:
+                raise KeyError(f"Column '{column}' not found in DataFrame.")
+            conditions.append(ibis_table[column] == value)
+        if not conditions:
+            raise ValueError("At least one column=value filter must be provided.")
+        from functools import reduce
+        import operator
+        combined = reduce(operator.and_, conditions)
+        filtered_table = ibis_table.filter(combined)
+        from leanframe.core.frame import DataFrame
         filtered_lf_df = DataFrame(filtered_table)
         return DataFrameHandler(filtered_lf_df)
 
