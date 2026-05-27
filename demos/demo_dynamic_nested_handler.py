@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Demo for DynamicNestedHandler comprehensive functionality.
+Demo for DataFrameHandler comprehensive functionality.
 
 This demonstrates a truly dynamic handler that can work with ANY nested DataFrame structure.
 Key features:
@@ -16,14 +16,14 @@ from demos.utils.create_nested_data import (
     create_extended_nested_dataframe,
     create_deeply_nested_dataframe,
 )
-from leanframe.core.frame import DynamicNestedHandler
+from leanframe.core.frame import DataFrameHandler
 
 
 def demo_basic_usage():
-    """Demo basic DynamicNestedHandler usage and structure inspection."""
+    """Demo basic DataFrameHandler usage and structure inspection."""
     print("=== Basic Usage Demo ===")
     df = create_simple_nested_dataframe(5)
-    handler = DynamicNestedHandler(df)
+    handler = DataFrameHandler(df)
 
     print(
         f"Original columns: {len(handler.original_columns)} - {handler.original_columns}"
@@ -60,10 +60,10 @@ def demo_basic_usage():
 
 
 def demo_data_access():
-    """Demo data access patterns of DynamicNestedHandler."""
+    """Demo data access patterns of DataFrameHandler."""
     print("\n=== Data Access Demo ===")
     df = create_simple_nested_dataframe(3)
-    handler = DynamicNestedHandler(df)
+    handler = DataFrameHandler(df)
 
     # Column-wise access
     names = handler.get_column("person_name")
@@ -88,10 +88,10 @@ def demo_data_access():
 
 
 def demo_filtering():
-    """Demo filtering functionality of DynamicNestedHandler."""
+    """Demo filtering functionality of DataFrameHandler."""
     print("\n=== Filtering Demo ===")
     df = create_simple_nested_dataframe(5)
-    handler = DynamicNestedHandler(df)
+    handler = DataFrameHandler(df)
 
     print(f"Original handler has {len(handler)} records")
 
@@ -109,12 +109,12 @@ def demo_filtering():
 
 
 def demo_different_structures():
-    """Demo DynamicNestedHandler with different nested structures."""
+    """Demo DataFrameHandler with different nested structures."""
     print("\n=== Different Structures Demo ===")
 
     # Extended structure with address
     extended_df = create_extended_nested_dataframe(2)
-    extended_handler = DynamicNestedHandler(extended_df)
+    extended_handler = DataFrameHandler(extended_df)
 
     expected_extended_columns = [
         "id",
@@ -143,10 +143,10 @@ def demo_different_structures():
 
 
 def demo_deep_nesting():
-    """Demo DynamicNestedHandler with deeply nested structures."""
+    """Demo DataFrameHandler with deeply nested structures."""
     print("\n=== Deep Nesting Demo ===")
     deep_df = create_deeply_nested_dataframe()
-    deep_handler = DynamicNestedHandler(deep_df)
+    deep_handler = DataFrameHandler(deep_df)
 
     print(f"Deep nested structure has {len(deep_handler.columns)} columns")
     print(f"Columns: {deep_handler.columns}")
@@ -171,10 +171,10 @@ def demo_deep_nesting():
 
 
 def demo_handler_capabilities():
-    """Demo general capabilities and edge cases of DynamicNestedHandler."""
+    """Demo general capabilities and edge cases of DataFrameHandler."""
     print("\n=== Handler Capabilities Demo ===")
     df = create_simple_nested_dataframe(2)
-    handler = DynamicNestedHandler(df)
+    handler = DataFrameHandler(df)
 
     print(f"Handler length: {len(handler)}")
 
@@ -197,7 +197,7 @@ def demo_handler_capabilities():
 
 def main():
     """Run all demos."""
-    print("🚀 DynamicNestedHandler Comprehensive Demo")
+    print("🚀 DataFrameHandler Comprehensive Demo")
     print("=" * 50)
 
     try:
@@ -210,7 +210,7 @@ def main():
 
         print("\n" + "=" * 50)
         print("✅ All demos completed successfully!")
-        print("🎯 DynamicNestedHandler can handle arbitrary nested structures!")
+        print("🎯 DataFrameHandler can handle arbitrary nested structures!")
 
     except Exception as e:
         print(f"\n❌ Demo failed with error: {e}")

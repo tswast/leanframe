@@ -440,7 +440,7 @@ class DataFrameHandler:
             NEW DataFrame with flattened structure (does not modify original)
             
         Example:
-            handler = DynamicNestedHandler(nested_df)
+            handler = DataFrameHandler(nested_df)
             flat1 = handler.extract_nested_fields()  # Computes extraction
             flat2 = handler.extract_nested_fields()  # Computes again (no cache!)
         """
@@ -515,6 +515,25 @@ class DataFrameHandler:
             path: info["extracted_name"] for path, info in self.nested_fields.items()
         }
     
+    def filter_by(self, column: str, value) -> "DataFrameHandler":
+        """
+        Return a new DataFrameHandler filtered by column == value.
+        Args:
+            column: The column name to filter on (must be a flattened/extracted column).
+            value: The value to match.
+        Returns:
+            New DataFrameHandler with filtered records.
+        """
+        # Extract the flat DataFrame with all columns
+        flat_df = self.extract_nested_fields(verbose=False)
+        ibis_table = flat_df._data
+        if column not in ibis_table.columns:
+            raise KeyError(f"Column '{column}' not found in DataFrame.")
+        filtered_table = ibis_table.filter(ibis_table[column] == value)
+        from leanframe.core.frame import DataFrame  # adjust import if needed
+        filtered_lf_df = DataFrame(filtered_table)
+        return DataFrameHandler(filtered_lf_df)
+
     def get_extracted_column_name(self, nested_path: str) -> str | None:
         """
         Look up the extracted column name for a nested path.
