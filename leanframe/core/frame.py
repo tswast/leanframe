@@ -530,7 +530,6 @@ class DataFrameHandler:
         if column not in ibis_table.columns:
             raise KeyError(f"Column '{column}' not found in DataFrame.")
         filtered_table = ibis_table.filter(ibis_table[column] == value)
-        from leanframe.core.frame import DataFrame  # adjust import if needed
         filtered_lf_df = DataFrame(filtered_table)
         return DataFrameHandler(filtered_lf_df)
 
