@@ -43,8 +43,9 @@ class Session:
     def read_sql_table(self, table_name: str):
         """Create a DataFrame pointing to the table called ``table_name``."""
         import leanframe.core.frame
-        #TODO: will crash if self._backend is None. 
-        return leanframe.core.frame.DataFrame(self._backend.table(table_name)) # type: ignore
+
+        # TODO: will crash if self._backend is None.
+        return leanframe.core.frame.DataFrame(self._backend.table(table_name))  # type: ignore
 
     def read_ibis(self, table_expression: ibis_types.Table):
         """Create a DataFrame from an Ibis table expression."""
@@ -60,8 +61,8 @@ class Session:
             return leanframe.core.frame.DataFrame(data)
         elif isinstance(data, pandas.DataFrame):
             table_name = f"lf_{''.join(random.choices(_ALPHABET, k=10))}"
-            #TODO: will crash if self._backend is None. 
-            table = self._backend.create_table(table_name, data, temp=True) # type: ignore
+            # TODO: will crash if self._backend is None.
+            table = self._backend.create_table(table_name, data, temp=True)  # type: ignore
             return leanframe.core.frame.DataFrame(table)
         else:
             raise NotImplementedError(

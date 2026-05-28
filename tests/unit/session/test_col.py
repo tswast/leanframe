@@ -28,12 +28,12 @@ def test_col_assign_with_memtable():
     session = Session(backend)
 
     # Create data
-    data = pd.DataFrame({'a': [1, 2, 3]})
+    data = pd.DataFrame({"a": [1, 2, 3]})
     t = ibis.memtable(data)
     df = session.DataFrame(t)
 
     # Use col to create a new column based on existing one
-    deferred_col = session.col('a')
+    deferred_col = session.col("a")
 
     # Verify it returns an Expression
     assert isinstance(deferred_col, leanframe.core.expression.Expression)
@@ -46,7 +46,7 @@ def test_col_assign_with_memtable():
     df_new = df.assign(b=expr)
 
     result = df_new.to_pandas()
-    expected = pd.DataFrame({'a': [1, 2, 3], 'b': [2, 3, 4]})
+    expected = pd.DataFrame({"a": [1, 2, 3], "b": [2, 3, 4]})
     pd.testing.assert_frame_equal(result, expected, check_dtype=False)
 
 
@@ -55,18 +55,18 @@ def test_col_arithmetic_chain():
     backend = ibis.sqlite.connect()
     session = Session(backend)
 
-    col_a = session.col('a')
-    col_b = session.col('b')
+    col_a = session.col("a")
+    col_b = session.col("b")
 
     # (a + b) * 2
     expr = (col_a + col_b) * 2
 
-    data = pd.DataFrame({'a': [10], 'b': [5]})
+    data = pd.DataFrame({"a": [10], "b": [5]})
     t = ibis.memtable(data)
     df = session.DataFrame(t)
 
     df_new = df.assign(c=expr)
 
     result = df_new.to_pandas()
-    expected = pd.DataFrame({'a': [10], 'b': [5], 'c': [30]})
+    expected = pd.DataFrame({"a": [10], "b": [5], "c": [30]})
     pd.testing.assert_frame_equal(result, expected, check_dtype=False)

@@ -66,4 +66,3 @@ if __name__ == "__main__":
     session = leanframe.Session(backend=backend)
     df_simple = create_df_simple(session)
     df_complex = create_df_complex(session)
-

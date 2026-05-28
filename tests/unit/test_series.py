@@ -216,18 +216,60 @@ def test_series_arithmetic_scalar(session, op, other, expected_data):
 @pytest.mark.parametrize(
     ("op", "other", "expected_data"),
     [
-        pytest.param(lambda s, o: s < o, 3, [True, True, False, False, False], id="lt_scalar"),
-        pytest.param(lambda s, o: s.lt(o), 3, [True, True, False, False, False], id="lt_method_scalar"),
-        pytest.param(lambda s, o: s > o, 3, [False, False, False, True, True], id="gt_scalar"),
-        pytest.param(lambda s, o: s.gt(o), 3, [False, False, False, True, True], id="gt_method_scalar"),
-        pytest.param(lambda s, o: s <= o, 3, [True, True, True, False, False], id="le_scalar"),
-        pytest.param(lambda s, o: s.le(o), 3, [True, True, True, False, False], id="le_method_scalar"),
-        pytest.param(lambda s, o: s >= o, 3, [False, False, True, True, True], id="ge_scalar"),
-        pytest.param(lambda s, o: s.ge(o), 3, [False, False, True, True, True], id="ge_method_scalar"),
-        pytest.param(lambda s, o: s != o, 3, [True, True, False, True, True], id="ne_scalar"),
-        pytest.param(lambda s, o: s.ne(o), 3, [True, True, False, True, True], id="ne_method_scalar"),
-        pytest.param(lambda s, o: s == o, 3, [False, False, True, False, False], id="eq_scalar"),
-        pytest.param(lambda s, o: s.eq(o), 3, [False, False, True, False, False], id="eq_method_scalar"),
+        pytest.param(
+            lambda s, o: s < o, 3, [True, True, False, False, False], id="lt_scalar"
+        ),
+        pytest.param(
+            lambda s, o: s.lt(o),
+            3,
+            [True, True, False, False, False],
+            id="lt_method_scalar",
+        ),
+        pytest.param(
+            lambda s, o: s > o, 3, [False, False, False, True, True], id="gt_scalar"
+        ),
+        pytest.param(
+            lambda s, o: s.gt(o),
+            3,
+            [False, False, False, True, True],
+            id="gt_method_scalar",
+        ),
+        pytest.param(
+            lambda s, o: s <= o, 3, [True, True, True, False, False], id="le_scalar"
+        ),
+        pytest.param(
+            lambda s, o: s.le(o),
+            3,
+            [True, True, True, False, False],
+            id="le_method_scalar",
+        ),
+        pytest.param(
+            lambda s, o: s >= o, 3, [False, False, True, True, True], id="ge_scalar"
+        ),
+        pytest.param(
+            lambda s, o: s.ge(o),
+            3,
+            [False, False, True, True, True],
+            id="ge_method_scalar",
+        ),
+        pytest.param(
+            lambda s, o: s != o, 3, [True, True, False, True, True], id="ne_scalar"
+        ),
+        pytest.param(
+            lambda s, o: s.ne(o),
+            3,
+            [True, True, False, True, True],
+            id="ne_method_scalar",
+        ),
+        pytest.param(
+            lambda s, o: s == o, 3, [False, False, True, False, False], id="eq_scalar"
+        ),
+        pytest.param(
+            lambda s, o: s.eq(o),
+            3,
+            [False, False, True, False, False],
+            id="eq_method_scalar",
+        ),
     ],
 )
 def test_series_comparison_scalar(session, op, other, expected_data):
@@ -254,18 +296,54 @@ def test_series_comparison_scalar(session, op, other, expected_data):
 @pytest.mark.parametrize(
     ("op", "expected_data"),
     [
-        pytest.param(lambda s1, s2: s1 < s2, [False, False, False, True, True], id="lt_series"),
-        pytest.param(lambda s1, s2: s1.lt(s2), [False, False, False, True, True], id="lt_method_series"),
-        pytest.param(lambda s1, s2: s1 > s2, [True, True, False, False, False], id="gt_series"),
-        pytest.param(lambda s1, s2: s1.gt(s2), [True, True, False, False, False], id="gt_method_series"),
-        pytest.param(lambda s1, s2: s1 <= s2, [False, False, True, True, True], id="le_series"),
-        pytest.param(lambda s1, s2: s1.le(s2), [False, False, True, True, True], id="le_method_series"),
-        pytest.param(lambda s1, s2: s1 >= s2, [True, True, True, False, False], id="ge_series"),
-        pytest.param(lambda s1, s2: s1.ge(s2), [True, True, True, False, False], id="ge_method_series"),
-        pytest.param(lambda s1, s2: s1 != s2, [True, True, False, True, True], id="ne_series"),
-        pytest.param(lambda s1, s2: s1.ne(s2), [True, True, False, True, True], id="ne_method_series"),
-        pytest.param(lambda s1, s2: s1 == s2, [False, False, True, False, False], id="eq_series"),
-        pytest.param(lambda s1, s2: s1.eq(s2), [False, False, True, False, False], id="eq_method_series"),
+        pytest.param(
+            lambda s1, s2: s1 < s2, [False, False, False, True, True], id="lt_series"
+        ),
+        pytest.param(
+            lambda s1, s2: s1.lt(s2),
+            [False, False, False, True, True],
+            id="lt_method_series",
+        ),
+        pytest.param(
+            lambda s1, s2: s1 > s2, [True, True, False, False, False], id="gt_series"
+        ),
+        pytest.param(
+            lambda s1, s2: s1.gt(s2),
+            [True, True, False, False, False],
+            id="gt_method_series",
+        ),
+        pytest.param(
+            lambda s1, s2: s1 <= s2, [False, False, True, True, True], id="le_series"
+        ),
+        pytest.param(
+            lambda s1, s2: s1.le(s2),
+            [False, False, True, True, True],
+            id="le_method_series",
+        ),
+        pytest.param(
+            lambda s1, s2: s1 >= s2, [True, True, True, False, False], id="ge_series"
+        ),
+        pytest.param(
+            lambda s1, s2: s1.ge(s2),
+            [True, True, True, False, False],
+            id="ge_method_series",
+        ),
+        pytest.param(
+            lambda s1, s2: s1 != s2, [True, True, False, True, True], id="ne_series"
+        ),
+        pytest.param(
+            lambda s1, s2: s1.ne(s2),
+            [True, True, False, True, True],
+            id="ne_method_series",
+        ),
+        pytest.param(
+            lambda s1, s2: s1 == s2, [False, False, True, False, False], id="eq_series"
+        ),
+        pytest.param(
+            lambda s1, s2: s1.eq(s2),
+            [False, False, True, False, False],
+            id="eq_method_series",
+        ),
     ],
 )
 def test_series_comparison_series(session, op, expected_data):
