@@ -4,8 +4,8 @@
 
 This implementation provides a **truly dynamic** nested DataFrame handler that can automatically introspect and work with any nested DataFrame structure in leanframe, eliminating the need for hardcoded schema-specific implementations.
 
-**Location**: `leanframe.core.nested_handler.DynamicNestedHandler`
-**Import**: `from leanframe import DynamicNestedHandler`
+**Location**: `leanframe.core.nested_handler.DataFrameHandler`
+**Import**: `from leanframe import DataFrameHandler`
 
 ## Key Features
 
@@ -19,7 +19,7 @@ This implementation provides a **truly dynamic** nested DataFrame handler that c
 - **Dictionary-like Access**: `handler.get_column('nested_field')`, `'field' in handler`, `handler.keys()`
 - **Record Access**: `handler[0]` returns complete record as dictionary
 - **Column Operations**: Get entire columns as lists for analysis
-- **Filtering**: `handler.filter_by('field', value)` with ibis expressions
+- **Filtering**: `handler.filter_by(field=value)` with ibis expressions
 
 ### ✅ Performance & Memory Efficient
 - **Lazy Evaluation**: Only extracts data when accessed
@@ -32,10 +32,10 @@ This implementation provides a **truly dynamic** nested DataFrame handler that c
 ### Basic Usage
 ```python
 # Import from leanframe
-from leanframe import DynamicNestedHandler
+from leanframe import DataFrameHandler
 
 # Or import from core module directly  
-from leanframe.core.nested_handler import DynamicNestedHandler
+from leanframe.core.nested_handler import DataFrameHandler
 
 # For testing, use absolute imports
 from demos.utils.create_nested_data import create_simple_nested_dataframe
@@ -44,7 +44,7 @@ from demos.utils.create_nested_data import create_simple_nested_dataframe
 df = create_simple_nested_dataframe()
 
 # Handler automatically adapts to structure
-handler = DynamicNestedHandler(df)
+handler = DataFrameHandler(df)
 
 # Access data naturally
 names = handler.get_column('person_name')  # ['Alice', 'Bob', 'Charlie']
@@ -76,7 +76,7 @@ for field_name, field_data in handler.items():
 ### Filtering
 ```python
 # Filter records
-adults = handler.filter_by('person_age', 30)
+adults = handler.filter_by(person_age=30)
 print(f"Found {len(adults)} records")
 ```
 
@@ -84,7 +84,7 @@ print(f"Found {len(adults)} records")
 
 ### Core Components
 
-1. **`DynamicNestedHandler`** - Main class providing the interface
+1. **`DataFrameHandler`** - Main class providing the interface
 2. **`create_nested_data.py`** - Centralized utilities for creating test data
 3. **Introspection Engine** - Automatically detects struct types and extracts field schemas
 4. **Field Extraction** - Converts nested fields to flat columns using ibis expressions
@@ -94,12 +94,12 @@ print(f"Found {len(adults)} records")
 ```
 leanframe/
 ├── core/
-│   ├── nested_handler.py          # THE DynamicNestedHandler implementation
+│   ├── nested_handler.py          # THE DataFrameHandler implementation
 │   ├── frame.py                   # DataFrame core
 │   └── ...other core modules...
 ├── docs/
 │   └── DYNAMIC_HANDLER_README.md  # This documentation
-└── __init__.py                    # Exports DynamicNestedHandler
+└── __init__.py                    # Exports DataFrameHandler
 
 tests/unit/
 ├── nested_data/                   # Nested data testing & examples
@@ -169,7 +169,7 @@ tests/unit/
 
 ## Conclusion
 
-The `DynamicNestedHandler` successfully addresses your requirement for **"a dynamic class being able to handle arbitrary DataFrames including nested and non nested columns and even multiple nesting layers"**. 
+The `DataFrameHandler` successfully addresses your requirement for **"a dynamic class being able to handle arbitrary DataFrames including nested and non nested columns and even multiple nesting layers"**. 
 
 It provides an intuitive, performant interface that automatically adapts to any nested DataFrame structure, making it easy to work with complex nested data in leanframe without requiring pandas or schema-specific implementations.
 

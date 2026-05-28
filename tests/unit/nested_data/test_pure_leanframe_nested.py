@@ -139,7 +139,7 @@ def test_columnar_data_access():
 
         table = pyarrow_result
         if table.num_rows > 0:
-            assert(1==2)
+            assert 1 == 2
             names = table.column("person_name").to_pylist()
             ages = table.column("person_age").to_pylist()
             emails = table.column("email").to_pylist()

@@ -19,11 +19,19 @@ from __future__ import annotations
 import ibis
 import ibis.expr.types as ibis_types
 import pandas as pd
+from functools import reduce
+import operator
 
 from leanframe.core.dtypes import convert_ibis_to_pandas
+from leanframe.core.indexing import (
+    Index,
+    ILocIndexer,
+    LocIndexer,
+    HeadTailMixin,
+)
 
 
-class DataFrame:
+class DataFrame(HeadTailMixin):
     """A 2D data structure, representing data and deferred computation.
 
     WARNING: Do not call this constructor directly. Use the factory methods on
@@ -32,11 +40,72 @@ class DataFrame:
 
     def __init__(self, data: ibis_types.Table):
         self._data = data
+        self._index: Index | None = None  # Explicit ordering specification
+
+        # Create indexers (lazy - only instantiated when accessed)
+        self._iloc: ILocIndexer | None = None
+        self._loc: LocIndexer | None = None
 
     @property
     def columns(self) -> pd.Index:
         """The column labels of the DataFrame."""
         return pd.Index(self._data.columns, dtype="object")
+
+    @property
+    def index(self) -> Index | None:
+        """
+        The index (ordering specification) for this DataFrame.
+
+        Returns None if no index is set. Use .set_index() to establish
+        deterministic ordering for position-based operations.
+
+        Example:
+            df = df.set_index('timestamp', ascending=False)
+            print(df.index)  # Index('timestamp', descending)
+        """
+        return self._index
+
+    @property
+    def iloc(self) -> ILocIndexer:
+        """
+        Position-based indexing with explicit ordering.
+
+        Requires an index to be set via .set_index() for deterministic results.
+
+        Returns:
+            ILocIndexer for position-based access
+
+        Raises:
+            ValueError: If accessed without setting an index first
+
+        Example:
+            df = df.set_index('timestamp', ascending=False)
+            newest_10 = df.iloc[0:10]
+        """
+        if self._iloc is None:
+            self._iloc = ILocIndexer(self)
+        return self._iloc
+
+    @property
+    def loc(self) -> LocIndexer:
+        """
+        Label-based indexing on index column values.
+
+        Requires an index to be set via .set_index().
+
+        Returns:
+            LocIndexer for label-based access
+
+        Raises:
+            ValueError: If accessed without setting an index first
+
+        Example:
+            df = df.set_index('customer_id')
+            customer = df.loc[12345]
+        """
+        if self._loc is None:
+            self._loc = LocIndexer(self)
+        return self._loc
 
     @property
     def dtypes(self) -> pd.Series:
@@ -94,6 +163,79 @@ class DataFrame:
         """Return the underlying Ibis expression."""
         return self._data
 
+    def set_index(
+        self,
+        columns: str | list[str],
+        ascending: bool | list[bool] = True,
+        name: str | None = None,
+    ) -> DataFrame:
+        """
+        Set the index (ordering specification) for this DataFrame.
+
+        This establishes deterministic row ordering for position-based
+        operations like .iloc, .head(), and .tail().
+
+        Unlike pandas, this does NOT modify the DataFrame structure or
+        create a new column. It only specifies how rows should be ordered
+        for subsequent operations.
+
+        Supports both single-column and multi-column ordering (like SQL's
+        ORDER BY col1, col2, col3). For multi-column ordering, the order
+        of columns determines their priority.
+
+        Args:
+            columns: Column name(s) to order by. Can be:
+                    - Single string: 'timestamp'
+                    - List of strings: ['priority', 'timestamp']
+                    Works with nested columns after extraction:
+                    - ['person_age', 'person_name']
+            ascending: Sort direction(s). Can be:
+                      - Single bool: True (applies to all columns)
+                      - List of bools: [False, True] (one per column)
+            name: Optional name for the index (defaults to column name)
+
+        Returns:
+            New DataFrame with index set (original DataFrame unchanged)
+
+        Raises:
+            KeyError: If any column doesn't exist
+            ValueError: If ascending list length doesn't match columns list length
+
+        Example:
+            # Single column ordering
+            df = df.set_index('timestamp', ascending=False)
+            newest = df.iloc[0]
+
+            # Multi-column ordering (ORDER BY priority DESC, timestamp DESC)
+            df = df.set_index(['priority', 'timestamp'], ascending=[False, False])
+            top_urgent = df.iloc[0:10]
+
+            # Works with nested columns after extraction
+            handler = DataFrameHandler(nested_df)
+            flat = handler.extract_nested_fields()
+            by_age_name = flat.set_index(['person_age', 'person_name'],
+                                         ascending=[False, True])
+
+            # Chain with other operations
+            top_10 = df.set_index('score', ascending=False).head(10)
+        """
+        # Normalize columns to list
+        col_list = [columns] if isinstance(columns, str) else list(columns)
+
+        # Validate all columns exist
+        for col in col_list:
+            if col not in self._data.columns:
+                available = ", ".join(self._data.columns)
+                raise KeyError(
+                    f"Column '{col}' not found. Available columns: {available}"
+                )
+
+        # Create new DataFrame with index set
+        new_df = DataFrame(self._data)
+        new_df._index = Index(columns, ascending=ascending, name=name)
+
+        return new_df
+
 
 """
 Dynamic Nested Data Handler for leanframe
@@ -102,78 +244,76 @@ This provides a truly dynamic handler that can introspect any DataFrame
 and automatically handle nested columns of any depth and structure.
 """
 
+
 # TODO: replace prints by logging, ask TIM about logger usage
 class DataFrameHandler:
     """
     Wrapper for a single leanframe DataFrame that handles nested column introspection.
-    
+
     This class wraps ONE DataFrame and provides metadata about its nested structure
     along with functional operations for extracting nested fields.
-    
+
     Design Philosophy - Stateless Data, Cached Metadata:
     - Wraps a SINGLE leanframe DataFrame (not multiple DataFrames)
     - Caches IMMUTABLE schema metadata (nested field mappings, column types)
     - Does NOT cache data or extraction results
     - All data operations return NEW DataFrame objects (functional style)
     - Thread-safe for concurrent operations
-    
+
     Features:
     - Automatic nested structure detection via schema introspection
     - Multi-level nesting support (configurable depth)
     - Dynamic field extraction (computed on-demand)
     - Preserves non-nested columns
     - Efficient columnar operations
-    
+
     Usage Pattern:
         # Create handler for a single DataFrame (introspects schema once)
         handler = DataFrameHandler(customers_df)
-        
+
         # Access cached schema metadata (fast, immutable)
         print(handler.extracted_fields)  # {'person.name': 'person_name', ...}
         handler.show_structure()
-        
+
         # Compute data operations (functional, returns new objects)
         extracted_df = handler.extract_nested_fields()  # No caching!
         another_df = handler.extract_nested_fields()    # Computes again
-        
+
         # For multi-DataFrame operations, use NestedHandler orchestrator
         # (See NestedHandler class for joins and other cross-DataFrame operations)
     """
 
     def __init__(
-        self, 
-        lf_df: DataFrame, 
-        max_depth: int = 10,
-        table_qualifier: str | None = None
+        self, lf_df: DataFrame, max_depth: int = 10, table_qualifier: str | None = None
     ):
         """
         Initialize handler by introspecting DataFrame schema.
-        
+
         Args:
             lf_df: leanframe DataFrame to analyze
             max_depth: Maximum nesting depth to analyze (prevents infinite recursion)
             table_qualifier: Optional backend table identifier (e.g., "project.dataset.table")
                            Can be None for in-memory DataFrames. Can be updated later
                            via set_table_qualifier() method.
-            
+
         Note:
             Constructor only analyzes SCHEMA (metadata), does not extract data.
             This makes handler creation fast and allows metadata reuse.
         """
         # Store reference to original DataFrame (not a copy!)
         self.original_df = lf_df
-        
+
         # Configuration
         self.max_depth = max_depth
-        
+
         # Backend reference - can be None for in-memory DataFrames
         # This is mutable and can be updated when DataFrame is saved to backend
         self._table_qualifier: str | None = table_qualifier
-        
+
         # Cached schema metadata (immutable after introspection)
         self.nested_fields: dict[str, dict] = {}  # Maps path -> field metadata
         self.struct_columns: set[str] = set()  # Tracks struct columns
-        
+
         # Perform schema introspection (builds metadata cache)
         self._introspect_structure()
 
@@ -288,25 +428,25 @@ class DataFrameHandler:
     def extract_nested_fields(self, verbose: bool = True) -> DataFrame:
         """
         Extract all discovered nested fields into a flat DataFrame.
-        
+
         IMPORTANT: This is a FUNCTIONAL operation that returns a NEW DataFrame.
         Results are NOT cached - each call computes fresh extraction.
         This ensures thread-safety and prevents stale data issues.
-        
+
         Args:
             verbose: If True, prints extraction progress. Set False for silent operation.
-        
+
         Returns:
             NEW DataFrame with flattened structure (does not modify original)
-            
+
         Example:
-            handler = DynamicNestedHandler(nested_df)
+            handler = DataFrameHandler(nested_df)
             flat1 = handler.extract_nested_fields()  # Computes extraction
             flat2 = handler.extract_nested_fields()  # Computes again (no cache!)
         """
         if not verbose:
             return self._extract_nested_fields_silent()
-            
+
         print("\n🚀 Extracting all nested fields...")
 
         ibis_table = self.original_df._data
@@ -354,7 +494,7 @@ class DataFrameHandler:
     def original_columns(self) -> list[str]:
         """
         Get original DataFrame column names.
-        
+
         Returns:
             List of column names from the original DataFrame
         """
@@ -364,24 +504,48 @@ class DataFrameHandler:
     def extracted_fields(self) -> dict[str, str]:
         """
         Get mapping of nested paths to extracted column names.
-        
+
         This returns CACHED SCHEMA METADATA, not data.
         Example: {'person.name': 'person_name', 'person.age': 'person_age'}
-        
+
         Returns:
             Dictionary mapping nested paths to flattened column names
         """
         return {
             path: info["extracted_name"] for path, info in self.nested_fields.items()
         }
-    
+
+    def filter_by(self, **kwargs) -> "DataFrameHandler":
+        """
+        Return a new DataFrameHandler filtered by one or more column==value pairs.
+        Args:
+            kwargs: column=value pairs to filter on (must be flattened/extracted columns).
+        Returns:
+            New DataFrameHandler with filtered records.
+        Example:
+            handler.filter_by(person_age=30, person_city="Berlin")
+        """
+        flat_df = self.extract_nested_fields(verbose=False)
+        ibis_table = flat_df._data
+        conditions = []
+        for column, value in kwargs.items():
+            if column not in ibis_table.columns:
+                raise KeyError(f"Column '{column}' not found in DataFrame.")
+            conditions.append(ibis_table[column] == value)
+        if not conditions:
+            raise ValueError("At least one column=value filter must be provided.")
+        combined = reduce(operator.and_, conditions)
+        filtered_table = ibis_table.filter(combined)
+        filtered_lf_df = DataFrame(filtered_table)
+        return DataFrameHandler(filtered_lf_df)
+
     def get_extracted_column_name(self, nested_path: str) -> str | None:
         """
         Look up the extracted column name for a nested path.
-        
+
         Args:
             nested_path: Nested path like 'person.address.city'
-            
+
         Returns:
             Extracted column name like 'person_address_city', or None if not found
         """
@@ -392,17 +556,17 @@ class DataFrameHandler:
     def columns(self) -> list[str]:
         """
         Get column names from extracted DataFrame (computed on-demand).
-        
+
         WARNING: This performs extraction on EVERY call - use sparingly.
         For efficiency, call extract_nested_fields() once and reuse the result.
         """
         extracted = self._extract_nested_fields_silent()
         return extracted.columns.tolist()
-    
+
     def get_column(self, column_name: str) -> list:
         """
         Get entire column data (computed on-demand, not cached).
-        
+
         WARNING: This extracts and materializes data on EVERY call.
         For efficiency, call extract_nested_fields() once and work with that.
         """
@@ -412,11 +576,11 @@ class DataFrameHandler:
             available = ", ".join(pandas_df.columns)
             raise KeyError(f"Column '{column_name}' not found. Available: {available}")
         return pandas_df[column_name].tolist()
-    
+
     def get_record(self, index: int) -> dict:
         """
         Get single record as dictionary (computed on-demand).
-        
+
         WARNING: Performs extraction and materialization on EVERY call.
         Not efficient for iterating over records - use extract_nested_fields() instead.
         """
@@ -425,44 +589,44 @@ class DataFrameHandler:
         if index >= len(pandas_df):
             raise IndexError(f"Index {index} out of range (0-{len(pandas_df) - 1})")
         return pandas_df.iloc[index].to_dict()
-    
+
     def __len__(self) -> int:
         """
         Get number of records from original DataFrame.
-        
+
         Note: Uses original DataFrame to avoid extraction overhead.
         """
         # Use original DataFrame to avoid extraction overhead
         pandas_df = self.original_df.to_pandas()
         return len(pandas_df)
-    
+
     def __getitem__(self, index: int) -> dict:
         """Get record by index."""
         return self.get_record(index)
-    
+
     def __iter__(self):
         """Iterate over records."""
         for i in range(len(self)):
             yield self.get_record(i)
-    
+
     def __contains__(self, key: str) -> bool:
         """Check if column exists in extracted fields."""
         return key in self.columns
-    
+
     def keys(self):
         """Get all column names."""
         return self.columns
-    
+
     def items(self):
         """Iterate over (column_name, column_data) pairs."""
         for key in self.keys():
             yield key, self.get_column(key)
-    
+
     def values(self):
         """Iterate over column data."""
         for key in self.keys():
             yield self.get_column(key)
-    
+
     def get(self, key: str, default=None):
         """Dictionary-like get with default value."""
         try:
@@ -473,13 +637,13 @@ class DataFrameHandler:
     def show_structure(self):
         """
         Display the complete DataFrame structure analysis.
-        
+
         Shows CACHED SCHEMA METADATA:
         - Original columns and their types
         - Discovered nested fields and their paths
         - Expected flattened column structure
         - Record count from original DataFrame
-        
+
         This is a read-only view of cached metadata, not data extraction.
         """
         print("\n📋 DYNAMIC STRUCTURE ANALYSIS")
@@ -497,7 +661,9 @@ class DataFrameHandler:
             print(f"  🔗 {original_path} → {extracted_name}")
 
         # Show what the flattened structure would look like
-        expected_columns = [col for col in self.original_columns if col not in self.struct_columns]
+        expected_columns = [
+            col for col in self.original_columns if col not in self.struct_columns
+        ]
         expected_columns.extend(self.extracted_fields.values())
         print(f"\nFlattened columns ({len(expected_columns)} total):")
         for col in expected_columns:
@@ -508,53 +674,53 @@ class DataFrameHandler:
         print(f"\nRecords: {len(pandas_preview)}")
 
     # Backend reference management
-    
+
     @property
     def table_qualifier(self) -> str | None:
         """
         Get the backend table qualifier for this DataFrame.
-        
+
         Returns:
             Backend table identifier (e.g., "project.dataset.table") or None
             if this is an in-memory DataFrame not yet persisted to backend.
-        
+
         Example:
             handler = DataFrameHandler(df)
             print(handler.table_qualifier)  # None (in-memory)
-            
+
             # After saving to backend
             handler.set_table_qualifier("mydb.sales.customers")
             print(handler.table_qualifier)  # "mydb.sales.customers"
         """
         return self._table_qualifier
-    
+
     def set_table_qualifier(self, qualifier: str | None):
         """
         Update the backend table qualifier for this DataFrame.
-        
+
         This should be called when:
         - DataFrame is saved to a backend table
         - DataFrame is loaded from a backend table
         - Backend table is dropped (set to None)
         - DataFrame is renamed in the backend
-        
+
         Args:
             qualifier: New backend table identifier or None to clear
-        
+
         Example:
             handler = DataFrameHandler(in_memory_df)
-            
+
             # Save to backend
             backend.create_table("customers", df.to_pandas())
             handler.set_table_qualifier("mydb.main.customers")
-            
+
             # Later, if table is dropped
             backend.drop_table("customers")
             handler.set_table_qualifier(None)  # DataFrame still in memory
         """
         old_qualifier = self._table_qualifier
         self._table_qualifier = qualifier
-        
+
         if old_qualifier != qualifier:
             if qualifier is None:
                 print(f"🔗 Cleared backend reference (was: {old_qualifier})")
@@ -562,20 +728,20 @@ class DataFrameHandler:
                 print(f"🔗 Set backend reference: {qualifier}")
             else:
                 print(f"🔗 Updated backend reference: {old_qualifier} → {qualifier}")
-    
+
     def has_backend_table(self) -> bool:
         """
         Check if this DataFrame has a backend table reference.
-        
+
         Returns:
             True if DataFrame has a backend table, False if in-memory only
         """
         return self._table_qualifier is not None
-    
+
     def get_backend_info(self) -> dict[str, str | None]:
         """
         Get information about the backend storage.
-        
+
         Returns:
             Dictionary with backend information:
             - 'qualifier': Full table qualifier or None
@@ -583,7 +749,7 @@ class DataFrameHandler:
             - 'dataset': Dataset name (if applicable)
             - 'table': Table name (if applicable)
             - 'type': 'backend' or 'memory'
-        
+
         Example:
             info = handler.get_backend_info()
             # {'qualifier': 'myproject.sales.customers',
@@ -594,36 +760,40 @@ class DataFrameHandler:
         """
         if self._table_qualifier is None:
             return {
-                'qualifier': None,
-                'project': None,
-                'dataset': None,
-                'table': None,
-                'type': 'memory'
+                "qualifier": None,
+                "project": None,
+                "dataset": None,
+                "table": None,
+                "type": "memory",
             }
-        
+
         # Try to parse standard format: project.dataset.table
-        parts = self._table_qualifier.split('.')
+        parts = self._table_qualifier.split(".")
         info: dict[str, str | None] = {
-            'qualifier': self._table_qualifier,
-            'project': None,
-            'dataset': None,
-            'table': None,
-            'type': 'backend'
+            "qualifier": self._table_qualifier,
+            "project": None,
+            "dataset": None,
+            "table": None,
+            "type": "backend",
         }
-        
+
         if len(parts) == 3:
-            info['project'] = parts[0]
-            info['dataset'] = parts[1]
-            info['table'] = parts[2]
+            info["project"] = parts[0]
+            info["dataset"] = parts[1]
+            info["table"] = parts[2]
         elif len(parts) == 2:
-            info['dataset'] = parts[0]
-            info['table'] = parts[1]
+            info["dataset"] = parts[0]
+            info["table"] = parts[1]
         elif len(parts) == 1:
-            info['table'] = parts[0]
-        
+            info["table"] = parts[0]
+
         return info
 
     def __repr__(self) -> str:
         num_extracted = len(self.nested_fields)
-        backend_info = " [in-memory]" if not self.has_backend_table() else f" [{self._table_qualifier}]"
+        backend_info = (
+            " [in-memory]"
+            if not self.has_backend_table()
+            else f" [{self._table_qualifier}]"
+        )
         return f"DataFrameHandler({len(self.original_columns)} cols → {num_extracted} nested fields{backend_info})"

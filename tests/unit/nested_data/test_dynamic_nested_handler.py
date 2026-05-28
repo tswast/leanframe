@@ -11,7 +11,11 @@ Key features:
 - Works with arbitrary nesting levels
 """
 
-from demos.utils.create_nested_data import create_simple_nested_dataframe, create_extended_nested_dataframe, create_deeply_nested_dataframe
+from demos.utils.create_nested_data import (
+    create_simple_nested_dataframe,
+    create_extended_nested_dataframe,
+    create_deeply_nested_dataframe,
+)
 from leanframe.core.frame import DataFrameHandler
 
 
@@ -83,11 +87,11 @@ def test_filtering():
 
     # Extract the flattened DataFrame
     extracted_df = handler.extract_nested_fields(verbose=False)
-    
+
     # Filter using pandas (simpler for testing)
     filtered_pandas = extracted_df.to_pandas()
     filtered_by_age = filtered_pandas[filtered_pandas["person_age"] == 30]
-    
+
     # Test the filtered results
     if len(filtered_by_age) > 0:
         assert all(filtered_by_age["person_age"] == 30)

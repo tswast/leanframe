@@ -19,15 +19,18 @@ import leanframe
 from leanframe.core.session import Session
 from leanframe.core.expression import Expression, col
 
+
 def test_col_standalone():
     """Verify col() works as a standalone function."""
-    expr = col('a')
+    expr = col("a")
     assert isinstance(expr, Expression)
+
 
 def test_col_session_static():
     """Verify Session.col() works as a static method."""
-    expr = Session.col('a')
+    expr = Session.col("a")
     assert isinstance(expr, Expression)
+
 
 def test_col_session_instance():
     """Verify session.col() works as an instance method (compatibility)."""
@@ -35,10 +38,11 @@ def test_col_session_instance():
     backend = ibis.sqlite.connect()
     session = Session(backend)
 
-    expr = session.col('a')
+    expr = session.col("a")
     assert isinstance(expr, Expression)
+
 
 def test_col_package_alias():
     """Verify leanframe.col is available."""
-    expr = leanframe.col('a')
+    expr = leanframe.col("a")
     assert isinstance(expr, Expression)
