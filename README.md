@@ -43,17 +43,26 @@ Create a DataFrame from a table.
 df = session.read_sql_table("bigquery-public-data.usa_names.usa_1910_2013")
 ```
 
-Perform pandas operations.
-
-```
-TODO
-```
+Perform pandas operations. See
+https://github.com/tswast/leanframe/tree/main/demos for examples.
 
 Get your results as a pandas DataFrame.
 
 ```python
 pddf = df.to_pandas()
 ```
+
+## Contributors
+
+Authors of significant contributions are listed in the
+[AUTHORS](https://github.com/tswast/leanframe/blob/main/AUTHORS) file. This
+project was founded by Andreas Beschorner (Vodafone) and Timothy Swena (Google
+LLC).
+
+## License
+
+Apache 2.0 license. See
+[LICENSE](https://github.com/tswast/leanframe/blob/main/LICENSE) for details.
 
 ## Disclaimer
 
